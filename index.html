@@ -40,6 +40,7 @@
   html,body{ height:100%; margin:0; font-family:'Tajawal',sans-serif; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
   body{
     background:var(--bg-color); color:var(--text-color);
+    /* سيتم تعديل padding-top و padding-bottom ديناميكياً بواسطة JS */
     padding-top:var(--total-header-height); padding-bottom:260px; 
     transition: background 0.25s, color 0.25s;
   }
@@ -63,6 +64,21 @@
   #darkToggle{
     position:absolute; top:12px; left:12px; z-index:120;
     background: rgba(0,0,0,0.06); border:0; padding:8px 10px; border-radius:8px; cursor:pointer;
+    font-weight:700;
+  }
+  
+  /* 🔥🔥 زر تغيير العملة في الهيدر 🔥🔥 */
+  #currencyToggle{
+    position:absolute; 
+    top:12px; 
+    right:12px; 
+    z-index:120;
+    background: rgba(0,122,255,0.1); 
+    color: var(--main-color);
+    border:1px solid rgba(0,122,255,0.2); 
+    padding:8px 10px; 
+    border-radius:8px; 
+    cursor:pointer;
     font-weight:700;
   }
 
@@ -108,10 +124,10 @@
 
   .card-body{ padding:12px 10px; padding-top:22px; cursor:pointer; }
   
-  /* تعديل لون العنوان إلى البرتقالي */
+  /* 🔥🔥 تعديل لون العنوان إلى الأسود في الوضع النهاري 🔥🔥 */
   .name{ 
     font-size:13px; font-weight:400; 
-    color: var(--secondary-color); /* #FF8C00 */
+    color: #222; 
     margin-bottom:6px; height:34px; overflow:hidden; line-height:1.3;
     display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
   }
@@ -202,7 +218,7 @@
     position:fixed; 
     inset:0; 
     display:none; 
-    align-items:center; /* 🔥🔥 التعديل هنا: التمركز العمودي 🔥🔥 */
+    align-items:center; 
     justify-content:center; 
     background:rgba(0,0,0,0.45); 
     z-index:300; 
@@ -239,7 +255,7 @@
   /* Dark mode */
   .dark body{ background:#0f1113; color:#e6e6e6; }
   .dark header{ background: rgba(0,0,0,0.54); }
-  /* تعديل لون العنوان في الوضع الليلي */
+  /* 🔥🔥 تعيين اللون البرتقالي في الوضع الليلي فقط 🔥🔥 */
   .dark .name{ color: var(--secondary-color); }
   /* تعديل لون السعر في الوضع الليلي */
   .dark .price, .dark .currency{ color: #FF0000; }
@@ -259,6 +275,8 @@
 
 <header>
   <button id="darkToggle" title="تغيير الوضع">🌙</button>
+  <button id="currencyToggle" onclick="toggleCurrency()" title="تغيير العملة">ريال يمني</button> 
+
   <div class="top-bar">
     <img src="logo.png" alt="ابن المختار للأدوات المنزلية" class="store-logo" loading="lazy">
   </div>
@@ -384,8 +402,12 @@
 
       try {
           const snapshot = await getDocs(categoriesCol);
-          snapshot.docs.forEach(doc => {
-              const catName = doc.data().name;
+          const docs = snapshot.docs.map(doc => doc.data());
+          // فرز أبجدي للتصنيفات
+          docs.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+          docs.forEach(data => {
+              const catName = data.name;
               if (catName) {
                   const btn = document.createElement('button');
                   btn.className = 'filter-btn';
@@ -465,9 +487,13 @@
 <script>
   /* ====================== Global state ====================== */
   const WHATSAPP = "967773266534";
+  const SAR_RATE = 140; // 🔥🔥 سعر الصرف: 1 ريال سعودي = 140 ريال يمني 🔥🔥
+  
   window.allProducts = window.allProducts || [];
   let cart = JSON.parse(localStorage.getItem("cart")||"[]") || [];
   let currentFilter = "all";
+  // 🔥🔥 تخزين العملة المختارة (YER: ريال يمني, SAR: ريال سعودي) 🔥🔥
+  let currentCurrency = localStorage.getItem('currentCurrency') || 'YER'; 
 
   const grid = document.getElementById("productsGrid");
   const cartItemsContainer = document.getElementById("cartItems");
@@ -475,10 +501,11 @@
   const emptyCartMsg = document.getElementById("emptyCartMsg");
   const checkoutSection = document.getElementById("checkoutSection");
   
-  // 🔥🔥 تحديد العناصر الجديدة في الشريط السفلي 🔥🔥
+  // تحديد عناصر الشريط السفلي
   const bottomNav = document.querySelector('.bottom-nav');
   const homeNavBarContent = document.getElementById('homeNavBarContent');
   const cartActionBarContent = document.getElementById('cartActionBarContent');
+  const currencyToggleBtn = document.getElementById('currencyToggle');
 
   const subTotalDisplay = document.getElementById("subTotalDisplay");
   const shippingDisplay = document.getElementById("shippingDisplay");
@@ -505,6 +532,35 @@
     for(let i=0;i<str.length;i++){ hash = str.charCodeAt(i) + ((hash<<5)-hash); }
     return Math.abs(hash);
   }
+
+  /* ====================== Currency Toggle Logic ====================== */
+  function updateCurrencyDisplay() {
+      if (currentCurrency === 'SAR') {
+          currencyToggleBtn.textContent = 'ريال سعودي';
+      } else {
+          currencyToggleBtn.textContent = 'ريال يمني';
+      }
+  }
+
+  window.toggleCurrency = function() {
+      currentCurrency = (currentCurrency === 'YER' ? 'SAR' : 'YER');
+      localStorage.setItem('currentCurrency', currentCurrency);
+      updateCurrencyDisplay();
+      
+      // إعادة تحميل المنتجات في الصفحة الرئيسية أو السلة
+      if (document.getElementById('homeView').classList.contains('active')) {
+          renderProducts();
+      } else if (document.getElementById('cartView').classList.contains('active')) {
+          renderCart();
+      }
+      // إعادة تحميل نافذة quickView إذا كانت مفتوحة لتحديث السعر
+      if (quickViewEl.style.display === 'flex' && quickViewBox.dataset.productId) {
+           quickViewById(quickViewBox.dataset.productId);
+      }
+  }
+  
+  // استدعاء عند التحميل الأولي
+  updateCurrencyDisplay(); 
 
   /* ====================== PWA prompt (kept) ====================== */
   let deferredPrompt;
@@ -666,40 +722,60 @@
       return;
     }
 
-    items.forEach(p => {
+    items.forEach((p, index) => { // 🔥🔥 استخدام index للتحميل الشرطي 🔥🔥
       const card = document.createElement('div'); card.className = 'card';
 
       const imgs = Array.isArray(p.image) ? p.image : [p.image || 'placeholder.png'];
+      
+      // سعر خام
+      let rawPrice = (p.price || "").toString().replace(/[^0-9.]/g, '');
+      let priceVal = parseFloat(rawPrice) || 0;
+      let fakeOldPrice = Math.floor(priceVal * 1.3);
+      
+      // 🔥🔥 منطق تحويل العملة 🔥🔥
+      let displayPrice = priceVal;
+      let displayCurrency = 'ر.ي';
+
+      if (currentCurrency === 'SAR') {
+          displayPrice = Math.ceil(priceVal / SAR_RATE); // نستخدم Math.ceil للتقريب للأعلى
+          fakeOldPrice = Math.ceil(fakeOldPrice / SAR_RATE);
+          displayCurrency = 'ر.س';
+      }
+      // 🔥🔥 نهاية منطق تحويل العملة 🔥🔥
+
+      // 🔥🔥 منطق التحميل الكسول الشرطي 🔥🔥
       let sliderHTML = ``;
       imgs.forEach((src, i) => {
-        // 🔥🔥 استخدام data-src لـ Lazy Loading 🔥🔥
-        const imgSrc = src || 'placeholder.png';
-        sliderHTML += `<img data-src="${imgSrc}" ${i===0?'class="active"':""} alt="${(p.name||'')}" >`;
+          const imgSrc = src || 'placeholder.png';
+          let imgTag;
+          
+          if (index < 4) { // تحميل أول 4 صور مباشرة (بدون Lazy Loading)
+              imgTag = `<img src="${imgSrc}" ${i===0?'class="active"':""} alt="${(p.name||'')}" loading="eager">`;
+          } else { // تحميل باقي الصور كسولاً
+              imgTag = `<img data-src="${imgSrc}" ${i===0?'class="active"':""} alt="${(p.name||'')}" loading="lazy">`;
+          }
+          sliderHTML += imgTag;
       });
-      
+
+      const hash = getHashNumber(p.id || Math.random().toString(36).slice(2));
+      const soldCount = (hash % 901) + 100;
+
       sliderHTML = `<div class="card-slider" data-id="${p.id}" onclick="openProduct('${p.id}')">
           ${sliderHTML}
           <div class="add-fab" title="أضف للسلة" onclick="event.stopPropagation(); addToCart('${p.id}')">+</div>
       </div>`;
 
-      // سعر خام
-      let rawPrice = (p.price || "").toString().replace(/[^0-9.]/g, '');
-      let priceVal = parseFloat(rawPrice) || 0;
-      let fakeOldPrice = Math.floor(priceVal * 1.3);
-
-      const hash = getHashNumber(p.id || Math.random().toString(36).slice(2));
-      const soldCount = (hash % 901) + 100;
 
       card.innerHTML = `
         ${sliderHTML}
         <div class="card-body" onclick="openProduct('${p.id}')">
           <div class="name">${p.name || 'منتج'}</div>
           <div class="price-area">
-             <span class="currency">ر.ي</span>
-             <span class="price">${priceVal.toLocaleString()}</span>
+             <span class="currency">${displayCurrency}</span>
+             <span class="price">${displayPrice.toLocaleString()}</span>
           </div>
           <div style="display:flex; align-items:center; margin-top:6px;">
-             <span class="old-price">${fakeOldPrice.toLocaleString()} ر.ي</span>
+             <span class="old-price">${fakeOldPrice.toLocaleString()} ${displayCurrency}</span>
              <span class="discount-tag">-30%</span>
           </div>
           <div class="extra-info">تم بيع ${soldCount}+ قطعة</div>
@@ -767,13 +843,13 @@
     cartItemsContainer.innerHTML = "";
     if(cart.length === 0){
       emptyCartMsg.style.display = "block";
-      // 🔥🔥 إخفاء أزرار الإجراءات والشريط السفلي يعود لوضع التنقل 🔥🔥
+      // إخفاء أزرار الإجراءات
       cartActionBarContent.style.display = "none";
       checkoutSection.style.display = "none";
       return;
     }
     emptyCartMsg.style.display = "none";
-    // 🔥🔥 إظهار أزرار الإجراءات 🔥🔥
+    // إظهار أزرار الإجراءات 
     cartActionBarContent.style.display = "flex";
     checkoutSection.style.display = "block";
 
@@ -782,12 +858,15 @@
       let rawPrice = (item.price || "").toString().replace(/[^0-9.]/g,'');
       let priceVal = parseFloat(rawPrice) || 0;
       productTotal += priceVal * (item.qty || 0);
+      
+      // عرض سعر المنتج في السلة دائماً بالريال اليمني (العملة الأصلية)
+      let itemDisplayPrice = priceVal.toLocaleString() + " ر.ي"; 
 
       cartItemsContainer.innerHTML += `
         <div class="cart-item">
           <div style="flex:1">
             <div style="font-weight:700">${item.name}</div>
-            <div style="color:#888">${item.price}</div>
+            <div style="color:#888">${itemDisplayPrice}</div> 
           </div>
           <div style="display:flex; align-items:center; gap:8px;">
             <button class="qty-btn" onclick="changeQty('${item.id}',1)">+</button>
@@ -798,11 +877,24 @@
       `;
     });
 
+    // 🔥🔥 منطق تحويل الإجمالي والشحن 🔥🔥
+    let displayCurrencySymbol = ' ر.ي';
+    let displayProductTotal = productTotal;
     let shippingCost = parseInt(shippingSelect.value || "1000");
-    let finalTotal = productTotal + shippingCost;
-    subTotalDisplay.innerText = productTotal.toLocaleString() + " ر.ي";
-    shippingDisplay.innerText = shippingCost.toLocaleString() + " ر.ي";
-    finalTotalDisplay.innerText = finalTotal.toLocaleString() + " ر.ي";
+    let displayShippingCost = shippingCost;
+
+    if (currentCurrency === 'SAR') {
+        displayCurrencySymbol = ' ر.س';
+        displayProductTotal = Math.ceil(productTotal / SAR_RATE);
+        displayShippingCost = Math.ceil(shippingCost / SAR_RATE);
+    }
+    
+    let finalTotal = displayProductTotal + displayShippingCost;
+    
+    // عرض النتائج
+    subTotalDisplay.innerText = displayProductTotal.toLocaleString() + displayCurrencySymbol;
+    shippingDisplay.innerText = displayShippingCost.toLocaleString() + displayCurrencySymbol;
+    finalTotalDisplay.innerText = finalTotal.toLocaleString() + displayCurrencySymbol;
   }
 
   /* ====================== Send cart via WhatsApp ====================== */
@@ -817,31 +909,48 @@
       productTotal += priceVal * (i.qty || 0);
       msg += `${idx+1}. ${i.name} (عدد ${i.qty})\n`;
     });
-    const shippingCost = parseInt(shippingSelect.value || "1000");
+    
+    // 🔥🔥 تطبيق سعر الصرف في رسالة الواتساب 🔥🔥
+    let displayCurrencySymbol = ' ر.ي';
+    let displayProductTotal = productTotal;
+    let shippingCost = parseInt(shippingSelect.value || "1000");
+    let displayShippingCost = shippingCost;
+
+    if (currentCurrency === 'SAR') {
+        displayCurrencySymbol = ' ر.س';
+        displayProductTotal = Math.ceil(productTotal / SAR_RATE);
+        displayShippingCost = Math.ceil(shippingCost / SAR_RATE);
+    }
+    let finalTotal = displayProductTotal + displayShippingCost;
+    // 🔥🔥 نهاية منطق تحويل العملة 🔥🔥
+    
     const shippingLocation = shippingSelect.options[shippingSelect.selectedIndex].text;
-    const finalTotal = productTotal + shippingCost;
-    msg += `\n──────────────\n📍 التوصيل: ${shippingLocation}\n💰 الإجمالي النهائي: ${finalTotal.toLocaleString()} ر.ي`;
+    
+    msg += `\n──────────────\n📍 التوصيل: ${shippingLocation}\n💰 الإجمالي النهائي: ${finalTotal.toLocaleString()}${displayCurrencySymbol}`;
     window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`);
   }
 
   window.prepareAndRedirectToCheckout = function(){
     cart = JSON.parse(localStorage.getItem("cart")||"[]") || cart;
     if(cart.length === 0) return;
+    
     let productTotal = 0;
     cart.forEach(item => {
       let rawPrice = (item.price || "").toString().replace(/[^0-9.]/g, '');
       productTotal += (parseFloat(rawPrice) || 0) * (item.qty || 0);
     });
     let shippingCost = parseInt(shippingSelect.value || "1000");
-    let finalTotal = productTotal + shippingCost;
-    let shippingLocation = shippingSelect.options[shippingSelect.selectedIndex].text;
+    
+    // هنا نحفظ القيم الأصلية بالريال اليمني ليتم تحويلها لاحقاً في صفحة الدفع إذا لزم الأمر
+    let finalTotal = productTotal + shippingCost; 
+    
     localStorage.setItem("checkoutSummary", JSON.stringify({
       subTotal: productTotal, finalTotal, shipping:{ cost: shippingCost, location: shippingLocation }
     }));
     window.location.href = 'checkout.html';
   }
 
-  /* ====================== Quick View (تم التأكد من مسار الصورة) ====================== */
+  /* ====================== Quick View (تم التأكد من مسار الصورة والعملة) ====================== */
   function quickViewById(id){
     const p = (window.allProducts || []).find(x => x.id === id);
     if(!p) return quickView({ id, name: 'منتج', price: 0, image: 'placeholder.png' });
@@ -853,7 +962,19 @@
     const imgs = Array.isArray(product.image) ? product.image : [product.image || 'placeholder.png'];
     const primaryImgSrc = imgs[0] || 'placeholder.png'; // الصورة الأولى
     
-    const price = (product.price || 0).toString();
+    // 🔥🔥 تطبيق تحويل العملة على السعر 🔥🔥
+    let rawPrice = (product.price || "").toString().replace(/[^0-9.]/g, '');
+    let priceVal = parseFloat(rawPrice) || 0;
+    
+    let displayPrice = priceVal.toLocaleString();
+    let displayCurrency = 'ر.ي';
+
+    if (currentCurrency === 'SAR') {
+        displayPrice = Math.ceil(priceVal / SAR_RATE).toLocaleString();
+        displayCurrency = 'ر.س';
+    }
+    // 🔥🔥 نهاية تطبيق تحويل العملة 🔥🔥
+
     quickViewBox.innerHTML = `
       <div style="display:flex; gap:0; flex-direction:column;">
         <div class="quick-view-img-wrapper">
@@ -861,7 +982,7 @@
         </div>
         <div style="padding:14px;">
           <h3 style="margin:0 0 8px 0;">${product.name || ''}</h3>
-          <div style="font-size:20px; color:var(--secondary-color); font-weight:800;">${price} ر.ي</div>
+          <div style="font-size:20px; color:var(--secondary-color); font-weight:800;">${displayPrice} ${displayCurrency}</div>
           <div style="margin-top:12px; display:flex; gap:8px;">
             <button style="flex:1; padding:10px; border-radius:8px; border:0; background:var(--main-color); color:#fff; font-weight:800;" onclick="addToCart('${product.id}'); closeQuickView();">أضف للسلة</button>
             <button style="flex:1; padding:10px; border-radius:8px; border:1px solid #eee; background:#fff;" onclick="openProduct('${product.id}');">عرض المنتج</button>
@@ -869,6 +990,8 @@
         </div>
       </div>
     `;
+    // حفظ الـ ID لتمكين تحديث العملة عند التبديل
+    quickViewBox.dataset.productId = product.id; 
     quickViewEl.style.display = 'flex';
   }
   function closeQuickView(){ quickViewEl.style.display = 'none'; }
