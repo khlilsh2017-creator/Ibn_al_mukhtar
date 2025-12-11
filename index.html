@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>IBN AL-MUKHTAR STORE</title>
+<title>AliExpress Style Store</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 
 <style>
@@ -14,7 +14,6 @@
     --card-bg: #ffffff;
     --text-color: #222;
     --nav-height: 60px;
-    /* 🔥 ارتفاع الهيدر الكلي (الاسم + البحث) */
     --total-header-height: 100px; 
   }
 
@@ -23,22 +22,21 @@
   body {
     margin: 0; background: var(--bg-color); color: var(--text-color);
     font-family: 'Tajawal', sans-serif;
-    padding-bottom: 100px; 
-    /* 🔥 زيادة المساحة العلوية لتشمل البار الجديد */
+    padding-bottom: 180px; /* زيادة المساحة للأزرار الجديدة */
     padding-top: var(--total-header-height);
   }
 
-  /* 🔥 الهيدر الرئيسي يغلف كل شيء ويكون بطول جديد */
+  /* الهيدر الرئيسي */
   header {
     position: fixed; top: 0; left: 0; right: 0;
-    height: var(--total-header-height); /* الارتفاع الكلي */
+    height: var(--total-header-height); 
     background: #fff;
-    padding-top: 5px; /* مسافة بسيطة */
+    padding-top: 5px; 
     box-shadow: 0 1px 5px rgba(0,0,0,0.05);
     z-index: 100;
   }
   
-  /* 🔥 البار العلوي باسم المتجر */
+  /* البار العلوي باسم المتجر */
   .top-bar {
     text-align: center;
     padding: 5px 15px 5px; 
@@ -50,7 +48,7 @@
   /* شريط البحث */
   .search-container {
     width: 100%; 
-    padding: 0 15px; /* إزالة الـ Padding الداخلي للهيدر وتوزيعه هنا */
+    padding: 0 15px; 
     display: flex; align-items: center; justify-content: center;
   }
   .search-input-wrapper {
@@ -65,7 +63,7 @@
   }
   .search-input::placeholder { color: #999; }
 
-  /* 🔥 تعديل مكان التصنيفات لتبدأ بعد الهيدر الجديد */
+  /* التصنيفات */
   .categories-wrapper {
     position: sticky; top: var(--total-header-height);
     background: #fff; z-index: 90; padding: 10px 10px;
@@ -83,15 +81,13 @@
     background: #ffe6e6; color: var(--aliexpress-red); font-weight: 800;
   }
 
-  /* الشبكة */
+  /* الشبكة والمنتجات */
   main { padding: 10px; min-height: 80vh; }
   .view-section { display: none; animation: fadeIn 0.3s ease; }
   .view-section.active { display: block; }
-  @keyframes fadeIn { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
-
   .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 
-  /* الكارت وتنسيقاته تبقى كما هي */
+  /* الكارت */
   .card {
     background: var(--card-bg); border-radius: 8px; overflow: hidden;
     position: relative; box-shadow: none;
@@ -110,7 +106,6 @@
     color: var(--aliexpress-red); font-size: 20px; font-weight: bold; cursor: pointer; z-index: 2;
     border: 1px solid #eee;
   }
-  .add-fab:active { background: var(--aliexpress-red); color: #fff; }
 
   .card-body { padding: 10px 8px; padding-top: 20px; }
   .name { 
@@ -133,26 +128,16 @@
     display: flex; align-items: center; gap: 10px; background: #fff;
     padding: 10px; margin-bottom: 10px; border-radius: 8px;
   }
-  .cart-info { flex: 1; }
-  .cart-price { color: var(--aliexpress-red); font-weight: bold; }
   
-  .shipping-box {
-    background: #fff; padding: 12px; margin: 10px 0; border-radius: 8px;
-  }
+  .shipping-box { background: #fff; padding: 12px; margin: 10px 0; border-radius: 8px; }
   .shipping-select {
     width: 100%; padding: 10px; margin-top: 5px;
     border: 1px solid #ddd; border-radius: 6px;
-    background: #fff; font-family: 'Tajawal', sans-serif;
-    font-size: 14px;
+    background: #fff; font-family: 'Tajawal', sans-serif; font-size: 14px;
   }
 
-  .cart-summary {
-    background: #fff; padding: 15px; margin: 10px 0; border-radius: 8px;
-  }
-  .summary-row {
-    display: flex; justify-content: space-between; margin-bottom: 8px;
-    font-size: 14px; color: #555;
-  }
+  .cart-summary { background: #fff; padding: 15px; margin: 10px 0; border-radius: 8px; }
+  .summary-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #555; }
   .total-row {
     border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px;
     display: flex; justify-content: space-between; align-items: center;
@@ -160,12 +145,31 @@
   }
   .final-price { color: var(--aliexpress-red); font-size: 20px; }
 
+  /* شريط الأزرار في الأسفل */
+  #checkoutActionButtons {
+      position: fixed; 
+      bottom: 70px; 
+      left: 10px; 
+      right: 10px; 
+      z-index: 95;
+      display: flex; 
+      flex-direction: column; 
+  }
   .checkout-btn {
-    position: fixed; bottom: 70px; left: 10px; right: 10px; 
-    background: linear-gradient(90deg, #FF8238, #FF4747); color: #fff; 
+    position: relative; 
+    width: 100%;
     padding: 12px; border-radius: 99px; text-align: center; font-weight: bold; 
-    font-size: 16px; box-shadow: 0 4px 10px rgba(255, 71, 71, 0.3); 
-    cursor: pointer; border: none; width: calc(100% - 20px); z-index: 95;
+    font-size: 16px; border: none; margin-bottom: 10px;
+  }
+  #checkoutBtnWhatsapp { /* زر واتساب القديم */
+    background: linear-gradient(90deg, #FF8238, #FF4747); 
+    color: #fff; 
+    box-shadow: 0 4px 10px rgba(255, 71, 71, 0.3); 
+  }
+  #checkoutBtnPage { /* زر التوجيه للصفحة الجديدة */
+    background: #4CAF50; /* أخضر */
+    color: #fff; 
+    box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
   }
 
   /* البار السفلي */
@@ -249,7 +253,10 @@
   </div>
 </main>
 
-<button id="checkoutBtn" class="checkout-btn" style="display:none" onclick="sendCart()">إتمام الشراء عبر واتساب</button>
+<div id="checkoutActionButtons" style="display:none">
+    <button id="checkoutBtnWhatsapp" class="checkout-btn" onclick="sendCart()">إرسال الطلب عبر واتساب</button>
+    <button id="checkoutBtnPage" class="checkout-btn new-page-btn" onclick="prepareAndRedirectToCheckout()">إتمام الطلب إلكترونياً</button>
+</div>
 
 <div class="bottom-nav">
   <div class="nav-item active" onclick="switchTab('home')">
@@ -315,8 +322,8 @@
   const cartItemsContainer = document.getElementById("cartItems");
   const cartBadge = document.getElementById("cartBadge");
   const emptyCartMsg = document.getElementById("emptyCartMsg");
-  const checkoutBtn = document.getElementById("checkoutBtn");
   const checkoutSection = document.getElementById("checkoutSection");
+  const checkoutActionButtons = document.getElementById("checkoutActionButtons"); // زر الأكشن الجديد
   
   const subTotalDisplay = document.getElementById("subTotalDisplay");
   const shippingDisplay = document.getElementById("shippingDisplay");
@@ -469,12 +476,12 @@
     cartItemsContainer.innerHTML = "";
     if(cart.length === 0) {
       emptyCartMsg.style.display = "block";
-      checkoutBtn.style.display = "none";
+      checkoutActionButtons.style.display = "none";
       checkoutSection.style.display = "none"; 
       return;
     }
     emptyCartMsg.style.display = "none";
-    checkoutBtn.style.display = "block";
+    checkoutActionButtons.style.display = "flex";
     checkoutSection.style.display = "block"; 
 
     let productTotal = 0;
@@ -529,6 +536,34 @@
     msg += `💰 *الإجمالي النهائي: ${finalTotal.toLocaleString()} ر.ي*`;
 
     window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`);
+  }
+  
+  // 🔥 دالة التوجيه لصفحة الدفع
+  window.prepareAndRedirectToCheckout = function() {
+      if(cart.length === 0) return;
+      
+      let productTotal = 0;
+      cart.forEach(item => {
+          let rawPrice = item.price.toString().replace(/[^0-9.]/g, ''); 
+          productTotal += (parseFloat(rawPrice) || 0) * item.qty;
+      });
+
+      let shippingCost = parseInt(shippingSelect.value);
+      let finalTotal = productTotal + shippingCost;
+      let shippingLocation = shippingSelect.options[shippingSelect.selectedIndex].text;
+      
+      // حفظ ملخص الطلب في الذاكرة لنقله لصفحة checkout
+      localStorage.setItem("checkoutSummary", JSON.stringify({
+          subTotal: productTotal,
+          finalTotal: finalTotal,
+          shipping: {
+              cost: shippingCost,
+              location: shippingLocation
+          }
+      }));
+      
+      // التوجيه إلى صفحة الدفع
+      window.location.href = 'checkout.html';
   }
 
   function startSlider() {
