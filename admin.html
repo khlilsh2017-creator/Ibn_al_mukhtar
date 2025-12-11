@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>لوحة التحكم والإدارة (اشعارات)</title>
+  <title>لوحة التحكم والإدارة</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 
   <style>
@@ -52,13 +52,14 @@
     .upload-box { border: 2px dashed #ddd; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; margin-bottom: 16px; background: #fafafa; }
     .thumbs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; }
     .thumbs img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; border: 1px solid #eee; flex-shrink: 0; }
-    .btn-save { width: 100%; padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(198,160,71,0.3); }
+    .btn-save, .btn-primary { 
+        width: 100%; padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(198,160,71,0.3); 
+    }
+    .btn-primary:active, .btn-save:active { opacity: 0.8; }
 
     /* تنسيق عرض المنتجات */
     .product-row { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #f0f0f0; }
     .p-info { display: flex; align-items: center; gap: 10px; }
-    
-    /* 🔥🔥🔥 تم إصلاح مشكلة كبر الصورة هنا 🔥🔥🔥 */
     .p-img { 
         width: 60px !important; 
         height: 60px !important; 
@@ -68,63 +69,51 @@
         background: #eee; 
         flex-shrink: 0; 
     }
-    
     .p-name { font-size: 14px; font-weight: bold; color: #333; }
     .p-price { font-size: 12px; color: var(--primary); }
-    .btn-delete { background: #ffe5e5; color: var(--danger); border: none; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; }
     
-    /* تنسيق قسم الطلبات الجديدة */
-    .order-card {
-        border: 2px solid var(--warning);
-        margin-bottom: 20px;
-        padding: 15px;
-        border-radius: 12px;
-        background: #fdfdfd;
-        border-width: 3px; 
+    /* أزرار الإجراء للمنتجات */
+    .product-actions { display: flex; gap: 8px; }
+    .btn-edit { background: #e0f2f1; color: #00897b; border: none; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; }
+    .btn-delete { background: #ffe5e5; color: var(--danger); border: none; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; }
+
+    /* تنسيق إدارة التصنيفات */
+    #categoriesList { margin-top: 15px; }
+    .category-item {
+        display: flex; justify-content: space-between; align-items: center;
+        background: #f0f0f0; padding: 8px 12px; margin-bottom: 8px; border-radius: 8px;
+        font-size: 14px; font-weight: 600;
     }
+    .btn-cat-delete { background: #fff; color: var(--danger); border: 1px solid var(--danger); padding: 4px 8px; border-radius: 6px; font-size: 11px; cursor: pointer; }
+    .cat-input-group { display: flex; gap: 10px; }
+    .cat-input-group input { margin-bottom: 0; flex-grow: 1; }
+    .cat-input-group button { width: auto; padding: 0 15px; height: 40px; background: var(--success); color: #fff; border: none; border-radius: 12px; }
+
+    /* تنسيق قسم الطلبات الجديدة (نفس السابق) */
+    .order-card { border: 2px solid var(--warning); margin-bottom: 20px; padding: 15px; border-radius: 12px; background: #fdfdfd; border-width: 3px; }
     .order-details { font-size: 14px; line-height: 1.6; }
     .client-name { font-size: 16px; font-weight: 800; color: #222; }
     .order-meta { font-size: 12px; color: #777; margin-bottom: 10px; }
     .item-list { font-size: 13px; margin-top: 10px; padding-right: 15px; }
     .total-price { font-size: 16px; font-weight: 800; color: var(--success); margin-top: 10px; }
-    .status-badge {
-        background: #ffe0b2; color: var(--warning); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;
-    }
+    .status-badge { background: #ffe0b2; color: var(--warning); padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
     .no-orders { text-align: center; padding: 40px; color: #999; }
-    .action-btn { 
-        padding: 8px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; 
-    }
+    .action-btn { padding: 8px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
     .btn-proof { background: #007bff; color: #fff; } 
 
-    /* إشعار الطلب الجديد */
-    .new-order-alert {
-        position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
-        background: var(--aliexpress-red); color: #fff; padding: 10px 20px;
-        border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        font-weight: bold; z-index: 200;
-        display: none;
-    }
-    
-    /* تصميم النافذة المنبثقة لعرض صورة الإشعار */
-    .modal {
-        display: none; position: fixed; z-index: 500; padding-top: 60px;
-        left: 0; top: 0; width: 100%; height: 100%; overflow: auto;
-        background-color: rgb(0,0,0); background-color: rgba(0,0,0,0.9);
-    }
-    .modal-content {
-        margin: auto; display: block; width: 90%; max-width: 700px;
-    }
-    .modal-content, .caption {
-        animation-name: zoom; animation-duration: 0.6s;
-    }
-    @keyframes zoom {
-        from {transform:scale(0)} to {transform:scale(1)}
-    }
-    .close {
-        position: absolute; top: 15px; right: 35px; color: #f1f1f1;
-        font-size: 40px; font-weight: bold; transition: 0.3s;
-    }
+    /* الإشعار والـ Modal */
+    .new-order-alert { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); background: var(--aliexpress-red); color: #fff; padding: 10px 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-weight: bold; z-index: 200; display: none; }
+    .modal { display: none; position: fixed; z-index: 500; padding-top: 60px; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.9); }
+    .modal-content { margin: auto; display: block; width: 90%; max-width: 700px; }
+    .close { position: absolute; top: 15px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; transition: 0.3s; }
     .close:hover, .close:focus { color: #bbb; text-decoration: none; cursor: pointer; }
+    
+    /* 🔥🔥 تنسيق نافذة تعديل المنتج 🔥🔥 */
+    #editModalContent { background: #fff; padding: 20px; border-radius: 12px; width: 90%; max-width: 500px; margin: 50px auto; position: relative; }
+    .btn-close-edit { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 20px; cursor: pointer; }
+    .edit-thumbs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; }
+    .edit-thumbs img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; border: 1px solid #eee; flex-shrink: 0; }
+
   </style>
 </head>
 <body>
@@ -144,16 +133,24 @@
   </div>
 
   <div class="card">
+    <h2>🏷️ إدارة التصنيفات</h2>
+    <div class="cat-input-group">
+        <input type="text" id="newCategoryName" placeholder="اسم التصنيف الجديد (مثل: أدوات مطبخ)">
+        <button onclick="addCategory()">+ إضافة</button>
+    </div>
+    <div id="categoriesList">
+        </div>
+  </div>
+  
+  <div class="card">
     <h2>➕ إضافة منتج جديد</h2>
     <label>اسم المنتج</label>
     <input type="text" id="name" placeholder="اسم المنتج...">
     <label>السعر</label>
     <input type="text" id="price" placeholder="مثال: 5000">
     <label>التصنيف</label>
-    <select id="category">
-      <option value="أدوات منزلية">أدوات منزلية</option>
-      <option value="إلكترونيات">إلكترونيات</option>
-    </select>
+    <select id="categorySelect">
+      </select>
     <label>صور المنتج</label>
     <div class="upload-box" onclick="document.getElementById('imagesInput').click()">
       <span class="upload-icon">📷</span>
@@ -178,6 +175,32 @@
   <img class="modal-content" id="proofImage">
 </div>
 
+<div id="editModal" class="modal" style="display:none;">
+    <div id="editModalContent">
+        <button class="btn-close-edit" onclick="document.getElementById('editModal').style.display='none'">&times;</button>
+        <h2>✏️ تعديل المنتج</h2>
+        <input type="hidden" id="editProductId">
+
+        <label>اسم المنتج</label>
+        <input type="text" id="editName">
+        
+        <label>السعر</label>
+        <input type="text" id="editPrice">
+        
+        <label>التصنيف الحالي</label>
+        <select id="editCategorySelect"></select>
+
+        <label>الوصف</label>
+        <textarea id="editDesc"></textarea>
+
+        <label>الصور الحالية (لا يمكن التعديل حالياً، يمكنك الحذف وإضافة منتج جديد إذا أردت تغيير الصور)</label>
+        <div class="edit-thumbs" id="editPreviewBox"></div>
+        
+        <button class="btn-primary" onclick="submitEditProduct()">حفظ التعديلات</button>
+    </div>
+</div>
+
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
   import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
@@ -196,13 +219,104 @@
   const db = getFirestore(app);
   const productsCol = collection(db, "products"); 
   const ordersCol = collection(db, "orders"); 
+  const categoriesCol = collection(db, "categories");
 
   let selectedImages = [];
   let lastOrderCount = 0; 
   let audio = new Audio('https://notificationsounds.com/storage/sounds/file-sounds/26540-bell-ding.mp3');
+  
+  let categories = []; 
 
   // ------------------------------------------------------------------
-  // 1. إدارة المنتجات
+  // 1. إدارة التصنيفات
+  // ------------------------------------------------------------------
+
+  async function fetchCategories() {
+      try {
+          const snapshot = await getDocs(categoriesCol);
+          categories = snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
+          renderCategories();
+          updateCategorySelectors();
+      } catch (e) {
+          console.error("Error fetching categories:", e);
+          // في حالة فشل الاتصال، استخدم تصنيفات افتراضية
+          categories = [
+              { id: '1', name: 'أدوات منزلية' },
+              { id: '2', name: 'إلكترونيات' }
+          ];
+          renderCategories();
+          updateCategorySelectors();
+      }
+  }
+
+  function renderCategories() {
+      const list = document.getElementById("categoriesList");
+      list.innerHTML = "";
+      if (categories.length === 0) {
+          list.innerHTML = "<div style='color:#777;'>لا توجد تصنيفات بعد.</div>";
+          return;
+      }
+      categories.forEach(cat => {
+          const item = document.createElement('div');
+          item.className = 'category-item';
+          item.innerHTML = `
+              <span>${cat.name}</span>
+              <button class="btn-cat-delete" onclick="deleteCategory('${cat.id}')">حذف</button>
+          `;
+          list.appendChild(item);
+      });
+  }
+
+  function updateCategorySelectors() {
+      const addSelect = document.getElementById('categorySelect');
+      const editSelect = document.getElementById('editCategorySelect');
+      
+      // مسح الخيارات القديمة
+      addSelect.innerHTML = '';
+      editSelect.innerHTML = '';
+
+      categories.forEach(cat => {
+          const option = new Option(cat.name, cat.name);
+          addSelect.appendChild(option.cloneNode(true));
+          editSelect.appendChild(option.cloneNode(true));
+      });
+  }
+
+  window.addCategory = async function() {
+      const name = document.getElementById('newCategoryName').value.trim();
+      if (!name) {
+          alert("أدخل اسم التصنيف أولاً.");
+          return;
+      }
+      if (categories.some(cat => cat.name === name)) {
+          alert("هذا التصنيف موجود بالفعل.");
+          return;
+      }
+
+      try {
+          await addDoc(categoriesCol, { name: name, createdAt: new Date() });
+          document.getElementById('newCategoryName').value = '';
+          await fetchCategories(); // إعادة جلب وتحديث
+      } catch (e) {
+          alert("خطأ في إضافة التصنيف: " + e.message);
+      }
+  }
+
+  window.deleteCategory = async function(id) {
+      const catName = categories.find(c => c.id === id)?.name || "التصنيف المحدد";
+      if(!confirm(`هل أنت متأكد من حذف التصنيف "${catName}"؟ سيتم الاحتفاظ بالمنتجات التابعة له لكن لن يظهر التصنيف في القائمة.`)) return;
+
+      try {
+          await deleteDoc(doc(db, "categories", id));
+          await fetchCategories(); // إعادة جلب وتحديث
+      } catch (e) {
+          alert("خطأ في حذف التصنيف: " + e.message);
+      }
+  }
+
+
+  // ------------------------------------------------------------------
+  // 2. إدارة المنتجات
   // ------------------------------------------------------------------
 
   document.getElementById("imagesInput").addEventListener("change", function () {
@@ -227,7 +341,7 @@
     const name = document.getElementById("name").value.trim();
     const price = document.getElementById("price").value.trim();
     const description = document.getElementById("desc").value.trim();
-    const category = document.getElementById("category").value;
+    const category = document.getElementById("categorySelect").value; 
     const btn = document.querySelector('.btn-save');
 
     if (!name || !price) {
@@ -250,6 +364,81 @@
       btn.textContent = "حفظ ونشر المنتج";
       btn.disabled = false;
     }
+  }
+  
+  // 🔥🔥 الدالة التي يتم استدعاؤها عند الضغط على زر "تعديل"
+  window.openEditModal = function(buttonElement) {
+      const productJson = buttonElement.getAttribute('data-product');
+      if (!productJson) {
+          console.error("No product data found on button.");
+          return;
+      }
+      
+      // تحليل البيانات JSON بأمان
+      const p = JSON.parse(productJson.replace(/&quot;/g, '"'));
+
+      // ملء حقول التعديل
+      document.getElementById('editProductId').value = p.id;
+      document.getElementById('editName').value = p.name;
+      document.getElementById('editPrice').value = p.price;
+      document.getElementById('editDesc').value = p.description;
+
+      // اختيار التصنيف الحالي
+      const select = document.getElementById('editCategorySelect');
+      select.value = p.category; 
+      
+      // عرض الصور الحالية
+      const editPreviewBox = document.getElementById('editPreviewBox');
+      editPreviewBox.innerHTML = '';
+      if (Array.isArray(p.image)) {
+          p.image.forEach(imgSrc => {
+              const img = document.createElement("img");
+              img.src = imgSrc;
+              editPreviewBox.appendChild(img);
+          });
+      }
+
+      // إظهار النافذة المنبثقة
+      document.getElementById('editModal').style.display = 'flex';
+  }
+
+
+  window.submitEditProduct = async function() {
+      const id = document.getElementById('editProductId').value;
+      const name = document.getElementById('editName').value.trim();
+      const price = document.getElementById('editPrice').value.trim();
+      const description = document.getElementById('editDesc').value.trim();
+      const category = document.getElementById('editCategorySelect').value;
+      
+      if (!name || !price) {
+          alert("يرجى تعبئة اسم المنتج والسعر.");
+          return;
+      }
+
+      const btn = document.querySelector('#editModalContent .btn-primary');
+      btn.textContent = "جاري حفظ التعديلات...";
+      btn.disabled = true;
+      
+      try {
+          const productRef = doc(db, "products", id);
+          await updateDoc(productRef, {
+              name: name,
+              price: price,
+              description: description,
+              category: category,
+              updatedAt: new Date()
+          });
+          
+          alert("✅ تم تعديل المنتج بنجاح!");
+          document.getElementById('editModal').style.display = 'none';
+          renderProducts();
+      } catch (e) {
+          console.error("Error updating document: ", e);
+          alert("حدث خطأ أثناء التعديل: " + e.message);
+      } finally {
+          btn.textContent = "حفظ التعديلات";
+          btn.disabled = false;
+      }
   }
 
   window.deleteProduct = async function(id) {
@@ -279,17 +468,34 @@
           const pId = docSnap.id;
           const thumb = Array.isArray(p.image) && p.image.length > 0 ? p.image[0] : '';
           
+          // 🔥🔥 تجهيز بيانات المنتج كـ JSON آمنة للعرض في HTML attribute 🔥🔥
+          const productData = {
+              id: pId,
+              name: p.name,
+              price: p.price,
+              description: p.description || '',
+              category: p.category,
+              image: p.image || []
+          };
+          // JSON.stringify ثم استبدال علامات التنصيص المزدوجة بعلامة HTML entity
+          const productJson = JSON.stringify(productData).replace(/"/g, '&quot;'); 
+          
           const row = document.createElement("div");
           row.className = "product-row";
+          
           row.innerHTML = `
             <div class="p-info">
               <img src="${thumb}" class="p-img">
               <div>
                 <div class="p-name">${p.name}</div>
                 <div class="p-price">${p.price}</div>
+                <div style="font-size:11px; color:#999;">التصنيف: ${p.category || 'غير مصنف'}</div>
               </div>
             </div>
-            <button class="btn-delete" onclick="deleteProduct('${pId}')">حذف</button>
+            <div class="product-actions">
+                <button class="btn-edit" onclick="openEditModal(this)" data-product='${productJson}'>تعديل</button>
+                <button class="btn-delete" onclick="deleteProduct('${pId}')">حذف</button>
+            </div>
           `;
           box.appendChild(row);
         });
@@ -300,7 +506,7 @@
   }
 
   // ------------------------------------------------------------------
-  // 2. إدارة الطلبات الجديدة + الاشعارات
+  // 3. إدارة الطلبات الجديدة + الاشعارات
   // ------------------------------------------------------------------
 
   async function renderOrders() {
@@ -381,7 +587,7 @@
       }
   }
 
-  // 🔥 وظيفة عرض الإشعار في نافذة منبثقة
+  // وظيفة عرض الإشعار في نافذة منبثقة
   window.showProof = function(base64Image) {
       const modal = document.getElementById("proofModal");
       const image = document.getElementById("proofImage");
@@ -429,9 +635,7 @@
   // المراقبة والتحديث
   setInterval(renderOrders, 10000); 
 
+  fetchCategories(); // ابدأ بتحميل التصنيفات أولاً
   renderProducts();
   renderOrders();
 </script>
-
-</body>
-</html>
