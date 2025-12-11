@@ -15,6 +15,7 @@
       --danger: #ff4d4d;
       --success: #4CAF50;
       --warning: #ff9800;
+      --aliexpress-red: #FF4747;
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
@@ -55,6 +56,21 @@
 
     /* تنسيق عرض المنتجات */
     .product-row { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #f0f0f0; }
+    .p-info { display: flex; align-items: center; gap: 10px; }
+    
+    /* 🔥🔥🔥 تم إصلاح مشكلة كبر الصورة هنا 🔥🔥🔥 */
+    .p-img { 
+        width: 60px !important; 
+        height: 60px !important; 
+        max-width: 60px !important; 
+        border-radius: 8px; 
+        object-fit: cover; 
+        background: #eee; 
+        flex-shrink: 0; 
+    }
+    
+    .p-name { font-size: 14px; font-weight: bold; color: #333; }
+    .p-price { font-size: 12px; color: var(--primary); }
     .btn-delete { background: #ffe5e5; color: var(--danger); border: none; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; }
     
     /* تنسيق قسم الطلبات الجديدة */
@@ -78,7 +94,7 @@
     .action-btn { 
         padding: 8px 15px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; 
     }
-    .btn-proof { background: #007bff; color: #fff; } /* زر الإشعار */
+    .btn-proof { background: #007bff; color: #fff; } 
 
     /* إشعار الطلب الجديد */
     .new-order-alert {
@@ -89,7 +105,7 @@
         display: none;
     }
     
-    /* 🔥 تصميم النافذة المنبثقة لعرض صورة الإشعار */
+    /* تصميم النافذة المنبثقة لعرض صورة الإشعار */
     .modal {
         display: none; position: fixed; z-index: 500; padding-top: 60px;
         left: 0; top: 0; width: 100%; height: 100%; overflow: auto;
@@ -317,7 +333,7 @@
 
               let orderDate = order.orderTime ? new Date(order.orderTime).toLocaleString('ar-EG') : 'غير متوفر';
               
-              const showProofBtn = order.paymentProof ? 
+              const showProofBtn = order.paymentProof && order.paymentMethod !== 'الدفع عند الاستلام' ? 
                 `<button class="action-btn btn-proof" onclick="showProof('${order.paymentProof}')">📷 عرض إشعار الدفع</button>` : '';
 
               const orderCard = document.createElement('div');
