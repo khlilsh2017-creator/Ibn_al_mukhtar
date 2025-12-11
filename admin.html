@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>لوحة التحكم والإدارة</title>
+  <title>لوحة التحكم والإدارة (اشعارات)</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 
   <style>
@@ -40,7 +40,7 @@
     }
     h2 { margin-top: 0; font-size: 16px; color: var(--primary); border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; margin-bottom: 15px; }
     
-    /* تنسيق إدخال المنتجات (كما كان سابقاً) */
+    /* تنسيق إدخال المنتجات */
     label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 13px; color: #555; }
     input, textarea, select {
       width: 100%; padding: 12px; border-radius: 12px;
@@ -52,7 +52,7 @@
     .thumbs img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; border: 1px solid #eee; flex-shrink: 0; }
     .btn-save { width: 100%; padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(198,160,71,0.3); }
 
-    /* تنسيق عرض المنتجات (كما كان سابقاً) */
+    /* تنسيق عرض المنتجات */
     .product-row { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #f0f0f0; }
     .p-info { display: flex; align-items: center; gap: 10px; }
     .p-img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: #eee; }
@@ -60,7 +60,7 @@
     .p-price { font-size: 12px; color: var(--primary); }
     .btn-delete { background: #ffe5e5; color: var(--danger); border: none; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; }
     
-    /* 🔥 تنسيق قسم الطلبات الجديدة */
+    /* تنسيق قسم الطلبات الجديدة */
     .order-card {
         border: 2px solid #ddd;
         margin-bottom: 20px;
@@ -68,6 +68,9 @@
         border-radius: 12px;
         background: #fdfdfd;
         position: relative;
+        /* 🔥 تمييز الطلب الجديد */
+        border-color: #ff9800;
+        border-width: 3px; 
     }
     .order-header {
         display: flex; justify-content: space-between; align-items: center;
@@ -83,6 +86,15 @@
         background: #ffe0b2; color: #ff9800; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;
     }
     .no-orders { text-align: center; padding: 40px; color: #999; }
+
+    /* 🔥 تصميم إشعار بسيط */
+    .new-order-alert {
+        position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+        background: var(--aliexpress-red); color: #fff; padding: 10px 20px;
+        border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        font-weight: bold; z-index: 200;
+        display: none;
+    }
   </style>
 </head>
 <body>
@@ -93,6 +105,8 @@
 </header>
 
 <div class="container">
+  
+  <div id="newOrderAlert" class="new-order-alert">🔔 طلب جديد وصل الآن!</div>
   
   <div class="card" style="border-color:#ff9800;">
     <h2>🛎️ الطلبات الجديدة (<span id="ordersCount">0</span>)</h2>
@@ -133,7 +147,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
   import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-  // 🔥 بيانات مشروعك هنا
+  // 🔥 بيانات مشروعك هنا (نفس المفاتيح التي أرسلتها سابقاً)
   const firebaseConfig = {
     apiKey: "AIzaSyB5mEBB0plzw_d-gAth-TK0xR523IX6nGg",
     authDomain: "my-fils-575be.firebaseapp.com",
@@ -146,9 +160,10 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const productsCol = collection(db, "products"); 
-  const ordersCol = collection(db, "orders"); // 🔥 الجدول الجديد للطلبات
+  const ordersCol = collection(db, "orders");
 
   let selectedImages = [];
+  let lastOrderCount = 0; // 🔥 متغير لتخزين عدد الطلبات في آخر فحص
 
   // ------------------------------------------------------------------
   // 1. إدارة المنتجات (القسم القديم)
@@ -191,10 +206,8 @@
       await addDoc(productsCol, {
         name: name, price: price, description: description, category: category, image: selectedImages, createdAt: new Date()
       });
-
       alert("✅ تم الحفظ بنجاح!");
       location.reload(); 
-      
     } catch (e) {
       console.error("Error adding document: ", e);
       alert("حدث خطأ أثناء الحفظ: " + e.message);
@@ -251,18 +264,23 @@
   }
 
   // ------------------------------------------------------------------
-  // 2. إدارة الطلبات الجديدة (القسم الجديد)
+  // 2. إدارة الطلبات الجديدة + الاشعارات
   // ------------------------------------------------------------------
 
   async function renderOrders() {
       const box = document.getElementById("ordersList");
-      box.innerHTML = "جاري تحميل الطلبات...";
       
       try {
-          // جلب الطلبات التي حالتها "جديد" فقط
+          // جلب الطلبات
           const snapshot = await getDocs(ordersCol); 
           const activeOrders = snapshot.docs.filter(doc => doc.data().orderStatus === 'جديد');
 
+          // 🔥 جزء الاشعارات: قارن العدد الحالي بالعدد السابق
+          if (lastOrderCount > 0 && activeOrders.length > lastOrderCount) {
+              triggerAlert(activeOrders.length - lastOrderCount);
+          }
+          lastOrderCount = activeOrders.length; // تحديث العدد لآخر فحص
+          
           box.innerHTML = "";
           document.getElementById("ordersCount").textContent = activeOrders.length;
 
@@ -279,7 +297,8 @@
                 `<li>${item.name} (عدد: ${item.qty})</li>`
               ).join('');
 
-              const orderDate = new Date(order.orderTime).toLocaleString('ar-EG');
+              // محاولة تحويل التاريخ إلى تنسيق محلي، مع التعامل مع التنسيقات المختلفة
+              let orderDate = order.orderTime ? new Date(order.orderTime).toLocaleString('ar-EG') : 'غير متوفر';
               
               const orderCard = document.createElement('div');
               orderCard.className = 'order-card';
@@ -294,7 +313,7 @@
                     <p class="client-name">الزبون: ${order.clientName}</p>
                     <p>📱 الجوال: <a href="tel:${order.clientPhone}" style="color:blue;">${order.clientPhone}</a></p>
                     <p>📍 الموقع: ${order.clientLocation}</p>
-                    <p>🚚 التوصيل: ${order.shippingDetails.location} (${order.shippingDetails.cost.toLocaleString()} ر.ي)</p>
+                    <p>🚚 التوصيل: ${order.shippingDetails.location.split('(')[0]} (${order.shippingDetails.cost.toLocaleString()} ر.ي)</p>
                     <hr style="border:none; border-top:1px dotted #eee;">
                     
                     <p style="font-weight:700;">قائمة الطلبات:</p>
@@ -324,7 +343,22 @@
       }
   }
 
-  // دالة لتغيير حالة الطلب إلى "تم المعالجة" (Processed)
+  // 🔥 دالة تشغيل التنبيه الصوتي
+  function triggerAlert(newCount) {
+      const audio = new Audio('https://notificationsounds.com/storage/sounds/file-sounds/26540-bell-ding.mp3'); // صوت تنبيه بسيط
+      audio.play();
+
+      const alertBox = document.getElementById('newOrderAlert');
+      alertBox.textContent = `🔔 وصل ${newCount} طلب جديد!`;
+      alertBox.style.display = 'block';
+
+      // إخفاء التنبيه بعد 5 ثواني
+      setTimeout(() => {
+          alertBox.style.display = 'none';
+      }, 5000);
+  }
+
+  // دالة لتغيير حالة الطلب
   window.markAsProcessed = async function(id) {
       if(!confirm("هل أنت متأكد من وضع علامة 'تمت المعالجة' على هذا الطلب؟")) return;
       try {
@@ -333,7 +367,6 @@
               orderStatus: 'تم المعالجة',
               processedAt: new Date().toISOString()
           });
-          alert("✔ تم تحديث حالة الطلب.");
           renderOrders(); 
       } catch (e) {
           alert("خطأ في تحديث الحالة: " + e.message);
@@ -351,231 +384,12 @@
        }
   }
 
+  // 🔥 وظيفة المراقبة (Polling): فحص الطلبات كل 10 ثواني
+  setInterval(renderOrders, 10000); 
 
-  // تشغيل دوال العرض عند فتح الصفحة
+  // تشغيل دوال العرض عند فتح الصفحة (لأول مرة)
   renderProducts();
   renderOrders();
-</script>
-
-</body>
-</html>
-      padding: 20px; margin-bottom: 24px;
-      border: 1px solid #f0f0f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-    }
-    h2 { margin-top: 0; font-size: 16px; color: var(--primary); border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; margin-bottom: 15px; }
-    label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 13px; color: #555; }
-    input, textarea, select {
-      width: 100%; padding: 12px; border-radius: 12px;
-      border: 1px solid #eee; background: #f9f9f9;
-      font-family: inherit; margin-bottom: 16px;
-      transition: 0.3s; font-size: 14px;
-    }
-    input:focus, textarea:focus, select:focus { border-color: var(--primary); background: #fff; outline: none; }
-    textarea { height: 100px; resize: none; }
-    .upload-box {
-      border: 2px dashed #ddd; border-radius: 12px;
-      padding: 20px; text-align: center; cursor: pointer;
-      margin-bottom: 16px; background: #fafafa;
-    }
-    .upload-icon { font-size: 24px; display: block; margin-bottom: 5px; }
-    .upload-text { font-size: 12px; color: #888; }
-    input[type="file"] { display: none; }
-    .thumbs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; }
-    .thumbs img {
-      width: 60px; height: 60px; object-fit: cover;
-      border-radius: 10px; border: 1px solid #eee; flex-shrink: 0;
-    }
-    .btn-save {
-      width: 100%; padding: 14px; background: var(--primary);
-      color: #fff; border: none; border-radius: 12px;
-      font-size: 16px; font-weight: bold; cursor: pointer;
-      box-shadow: 0 4px 10px rgba(198,160,71,0.3);
-    }
-    .btn-save:disabled { background: #ccc; cursor: not-allowed; }
-    .product-row {
-      display: flex; align-items: center; justify-content: space-between;
-      background: #fff; padding: 10px; margin-bottom: 10px;
-      border-radius: 12px; border: 1px solid #f0f0f0;
-    }
-    .p-info { display: flex; align-items: center; gap: 10px; }
-    .p-img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: #eee; }
-    .p-name { font-size: 14px; font-weight: bold; color: #333; }
-    .p-price { font-size: 12px; color: var(--primary); }
-    .btn-delete {
-      background: #ffe5e5; color: var(--danger);
-      border: none; padding: 8px 12px; border-radius: 8px;
-      font-size: 12px; font-weight: bold; cursor: pointer;
-    }
-  </style>
-</head>
-<body>
-
-<header>
-  <h1>لوحة التحكم (سحابي)</h1>
-  <a href="index.html" class="home-link">المتجر 🏠</a>
-</header>
-
-<div class="container">
-  <div class="card">
-    <h2>➕ إضافة منتج جديد</h2>
-    <label>اسم المنتج</label>
-    <input type="text" id="name" placeholder="اسم المنتج...">
-    <label>السعر</label>
-    <input type="text" id="price" placeholder="مثال: 5000">
-    <label>التصنيف</label>
-    <select id="category">
-      <option value="أدوات منزلية">أدوات منزلية</option>
-      <option value="إلكترونيات">إلكترونيات</option>
-    </select>
-    <label>صور المنتج</label>
-    <div class="upload-box" onclick="document.getElementById('imagesInput').click()">
-      <span class="upload-icon">📷</span>
-      <span class="upload-text">اضغط لاختيار الصور</span>
-    </div>
-    <input type="file" id="imagesInput" accept="image/*" multiple>
-    <div class="thumbs" id="previewBox"></div>
-    <label>الوصف</label>
-    <textarea id="desc" placeholder="تفاصيل المنتج..."></textarea>
-    <button class="btn-save" onclick="saveProduct()">حفظ ونشر المنتج</button>
-  </div>
-
-  <div class="card">
-    <h2>📦 المنتجات في السيرفر (<span id="count">0</span>)</h2>
-    <div id="productsList">جاري الاتصال بقاعدة البيانات...</div>
-  </div>
-</div>
-
-<script type="module">
-  // استيراد الدوال من روابط CDN لتعمل في المتصفح
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-
-  // 🔥 بياناتك الحقيقية تم دمجها هنا
-  const firebaseConfig = {
-    apiKey: "AIzaSyB5mEBB0plzw_d-gAth-TK0xR523IX6nGg",
-    authDomain: "my-fils-575be.firebaseapp.com",
-    projectId: "my-fils-575be",
-    storageBucket: "my-fils-575be.firebasestorage.app",
-    messagingSenderId: "670428095338",
-    appId: "1:670428095338:web:75d4a577cc648c208d7b13"
-  };
-
-  // تهيئة فايربيس
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const productsCol = collection(db, "products"); 
-
-  let selectedImages = [];
-
-  // معالجة الصور
-  document.getElementById("imagesInput").addEventListener("change", function () {
-    selectedImages = [];
-    document.getElementById("previewBox").innerHTML = "";
-    const files = [...this.files];
-    if(files.length > 0) document.querySelector('.upload-text').innerText = `تم اختيار ${files.length} صور`;
-
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        selectedImages.push(e.target.result);
-        const img = document.createElement("img");
-        img.src = e.target.result;
-        document.getElementById("previewBox").appendChild(img);
-      };
-      reader.readAsDataURL(file);
-    });
-  });
-
-  // حفظ المنتج
-  window.saveProduct = async function() {
-    const name = document.getElementById("name").value.trim();
-    const price = document.getElementById("price").value.trim();
-    const description = document.getElementById("desc").value.trim();
-    const category = document.getElementById("category").value;
-    const btn = document.querySelector('.btn-save');
-
-    if (!name || !price) {
-      alert("❌ يرجى تعبئة اسم المنتج والسعر");
-      return;
-    }
-
-    btn.textContent = "جاري الرفع للسيرفر...";
-    btn.disabled = true;
-
-    try {
-      await addDoc(productsCol, {
-        name: name,
-        price: price,
-        description: description,
-        category: category,
-        image: selectedImages,
-        createdAt: new Date()
-      });
-
-      alert("✅ تم الحفظ بنجاح!");
-      location.reload(); 
-      
-    } catch (e) {
-      console.error("Error adding document: ", e);
-      alert("حدث خطأ أثناء الحفظ: " + e.message);
-      btn.textContent = "حفظ ونشر المنتج";
-      btn.disabled = false;
-    }
-  }
-
-  // حذف المنتج
-  window.deleteProduct = async function(id) {
-    if(!confirm("هل أنت متأكد من حذف هذا المنتج نهائياً؟")) return;
-    try {
-        const btn = document.querySelector(`button[onclick="deleteProduct('${id}')"]`);
-        if(btn) btn.textContent = "...";
-        
-        await deleteDoc(doc(db, "products", id));
-        renderProducts(); 
-    } catch(e) {
-        alert("خطأ: " + e.message);
-    }
-  }
-
-  // عرض المنتجات
-  async function renderProducts() {
-    const box = document.getElementById("productsList");
-    try {
-        const snapshot = await getDocs(productsCol);
-        box.innerHTML = "";
-        document.getElementById("count").textContent = snapshot.docs.length;
-
-        if (snapshot.docs.length === 0) {
-            box.innerHTML = "<div style='text-align:center;color:#777;'>لا توجد منتجات في السيرفر حالياً</div>";
-            return;
-        }
-
-        snapshot.docs.forEach(docSnap => {
-          const p = docSnap.data();
-          const pId = docSnap.id;
-          const thumb = Array.isArray(p.image) && p.image.length > 0 ? p.image[0] : '';
-          
-          const row = document.createElement("div");
-          row.className = "product-row";
-          row.innerHTML = `
-            <div class="p-info">
-              <img src="${thumb}" class="p-img">
-              <div>
-                <div class="p-name">${p.name}</div>
-                <div class="p-price">${p.price}</div>
-              </div>
-            </div>
-            <button class="btn-delete" onclick="deleteProduct('${pId}')">حذف</button>
-          `;
-          box.appendChild(row);
-        });
-    } catch (e) {
-        box.innerHTML = `<div style='color:red;text-align:center'>فشل الاتصال: تأكد من إعدادات Firebase</div>`;
-        console.error(e);
-    }
-  }
-
-  renderProducts();
 </script>
 
 </body>
