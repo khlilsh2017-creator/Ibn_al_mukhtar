@@ -3,289 +3,292 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>تفاصيل المنتج</title>
+<title id="productTitle">تفاصيل المنتج</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 
 <style>
-  :root {
-    --aliexpress-red: #FF4747; 
-    --aliexpress-orange: #FF8238;
-    --bg-color: #f2f2f2;
-    --card-bg: #ffffff;
-    --text-color: #222;
-  }
+    :root {
+        --aliexpress-red: #FF4747; 
+        --bg-color: #f8f9fa;
+        --card-bg: #ffffff;
+        --text-color: #222;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+        margin: 0; background: var(--bg-color); color: var(--text-color);
+        font-family: 'Tajawal', sans-serif;
+        padding-bottom: 120px; 
+    }
+    
+    /* الهيدر */
+    header {
+        position: fixed; top: 0; left: 0; right: 0;
+        height: 50px; background: #fff;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0 15px; z-index: 100;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+    }
+    .back-btn {
+        font-size: 24px; color: #333; text-decoration: none; font-weight: bold;
+    }
+    .main-content { padding-top: 50px; }
 
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body {
-    margin: 0; background: var(--bg-color); color: var(--text-color);
-    font-family: 'Tajawal', sans-serif; padding-bottom: 80px;
-  }
+    /* صور المنتج (سلايدر) */
+    .product-images { 
+        width: 100%; padding-top: 100%; position: relative;
+        background: #fff; overflow: hidden;
+    }
+    .product-images img {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        object-fit: contain; /* لتظهر الصورة بالكامل */
+        opacity: 0; transition: opacity 0.4s;
+    }
+    .product-images img.active { opacity: 1; }
+    .nav-dots {
+        position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+        display: flex; gap: 8px; z-index: 10;
+    }
+    .dot {
+        width: 8px; height: 8px; border-radius: 50%; background: #ccc;
+        transition: 0.3s;
+    }
+    .dot.active { background: var(--aliexpress-red); }
 
-  /* الهيدر العائم */
-  .header-actions {
-    position: fixed; top: 0; left: 0; right: 0;
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 15px; z-index: 100;
-    pointer-events: none;
-  }
-  
-  .icon-btn {
-    width: 40px; height: 40px; background: rgba(0,0,0,0.4);
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    color: #fff; text-decoration: none;
-    backdrop-filter: blur(4px); pointer-events: auto;
-  }
+    /* تفاصيل المنتج */
+    .details-card {
+        background: var(--card-bg); padding: 15px; margin-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    .price-area { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 5px; }
+    .price { font-size: 28px; font-weight: 800; color: var(--aliexpress-red); }
+    .currency { font-size: 14px; font-weight: 700; color: var(--aliexpress-red); }
+    .old-price { font-size: 14px; text-decoration: line-through; color: #999; }
+    .product-name { font-size: 18px; font-weight: 700; color: var(--text-color); line-height: 1.4; }
+    .description-card { padding: 15px; }
+    .description-card h3 { font-size: 16px; border-bottom: 2px solid #eee; padding-bottom: 5px; margin-bottom: 10px; }
+    .description-text { font-size: 14px; color: #555; line-height: 1.6; white-space: pre-wrap; }
 
-  /* سلة للعرض فقط */
-  .cart-display-only {
-    width: 40px; height: 40px; background: rgba(0,0,0,0.4);
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    color: #fff; backdrop-filter: blur(4px);
-    position: relative;
-    pointer-events: none; /* غير قابل للنقر */
-  }
-
-  .badge {
-    position: absolute; top: -2px; right: -2px;
-    background: var(--aliexpress-red); color: #fff;
-    font-size: 10px; width: 18px; height: 18px;
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    border: 1px solid #fff;
-  }
-
-  /* السلايدر اليدوي */
-  .hero-slider {
-    position: relative; width: 100%; height: 100vw; max-height: 450px;
-    background: #fff;
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .hero-slider::-webkit-scrollbar { display: none; }
-
-  .hero-slider img {
-    width: 100%; height: 100%;
-    flex-shrink: 0; object-fit: contain;
-    scroll-snap-align: center;
-  }
-
-  .dots {
-    position: absolute; bottom: 15px; left: 0; right: 0;
-    display: flex; justify-content: center; gap: 6px; z-index: 5;
-    pointer-events: none;
-  }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(0,0,0,0.1); transition: 0.3s; }
-  .dot.active { background: var(--aliexpress-red); transform: scale(1.2); }
-
-  /* التفاصيل */
-  .product-info-card {
-    background: #fff; padding: 15px; margin-bottom: 10px;
-    border-bottom: 1px solid #eee;
-  }
-  .price-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px; }
-  .current-price { font-size: 24px; font-weight: 800; color: var(--aliexpress-red); }
-  .currency { font-size: 14px; font-weight: 700; color: var(--aliexpress-red); }
-  .old-price-row { display: flex; align-items: center; gap: 8px; color: #999; font-size: 13px; margin-bottom: 10px; }
-  .old-price { text-decoration: line-through; }
-  .discount-label {
-    background: #ffe6e6; color: var(--aliexpress-red);
-    padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 11px;
-  }
-  .product-title { font-size: 16px; font-weight: 400; line-height: 1.4; color: #000; margin-bottom: 10px; }
-  .extra-stats {
-    display: flex; justify-content: space-between; 
-    font-size: 12px; color: #777; padding-top: 10px; border-top: 1px solid #f5f5f5;
-  }
-  .description-box { background: #fff; padding: 15px; margin-top: 10px; }
-  .sec-title { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
-  .desc-text { font-size: 13px; line-height: 1.6; color: #555; white-space: pre-wrap; }
-
-  /* البار السفلي */
-  .bottom-actions {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: #fff; padding: 10px 15px;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-    display: flex; gap: 10px; z-index: 100;
-  }
-  .action-btn {
-    flex: 1; border: none; padding: 12px; border-radius: 99px;
-    font-weight: 700; font-size: 14px; color: #fff; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .btn-cart { background: linear-gradient(90deg, #FFB75E, #FF8238); }
-  .btn-buy { background: linear-gradient(90deg, #FF512F, #DD2476); }
-  .action-btn:active { opacity: 0.9; transform: scale(0.98); }
-
-  /* Toast */
-  .toast {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: rgba(0,0,0,0.8); color: #fff; padding: 15px 25px;
-    border-radius: 8px; font-size: 14px; z-index: 200; text-align: center;
-    opacity: 0; visibility: hidden; transition: 0.3s; pointer-events: none;
-  }
-  .toast.show { opacity: 1; visibility: visible; }
-  .toast-icon { font-size: 30px; display: block; margin-bottom: 5px; }
+    /* شريط الإجراءات السفلي */
+    .bottom-actions {
+        position: fixed; bottom: 0; left: 0; right: 0; height: 70px;
+        background: #fff; display: flex; align-items: center; padding: 0 15px;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100;
+    }
+    .btn-cart {
+        flex: 1; padding: 15px; background: #FFC000; color: #222; 
+        border: none; border-radius: 99px 0 0 99px; font-size: 15px; 
+        font-weight: bold; cursor: pointer;
+    }
+    .btn-buy {
+        flex: 1; padding: 15px; background: var(--aliexpress-red); color: #fff;
+        border: none; border-radius: 0 99px 99px 0; font-size: 15px; 
+        font-weight: bold; cursor: pointer;
+    }
+    .loading-msg { text-align: center; padding: 50px; color: #999; }
 </style>
 </head>
 <body>
 
-<div class="header-actions">
-  <a href="index.html" class="icon-btn">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-  </a>
-  
-  <div class="cart-badge-wrapper">
-    <div class="cart-display-only">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 20a1 1 0 100-2 1 1 0 000 2zm7 0a1 1 0 100-2 1 1 0 000 2zM1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
-    </div>
-    <div id="headerCartBadge" class="badge" style="display:none">0</div>
-  </div>
-</div>
+<header>
+    <a href="index.html" class="back-btn">→</a>
+    <span style="font-size: 16px; font-weight: 700;">تفاصيل المنتج</span>
+    <span style="width: 24px;"></span>
+</header>
 
-<div id="productContent"></div>
-
-<div id="toast" class="toast">
-  <span class="toast-icon">✅</span>
-  تمت الإضافة للسلة
-</div>
-
-<script>
-  const WHATSAPP = "967773266534";
-  const params = new URLSearchParams(window.location.search);
-  const productId = params.get("id");
-
-  const allProducts = JSON.parse(localStorage.getItem("products")) || [];
-  const product = allProducts.find(p => p.id == productId);
-  const container = document.getElementById("productContent");
-
-  if (!product) {
-    container.innerHTML = `<div style="text-align:center;padding:100px 20px;color:#888;">
-      المنتج غير موجود!<br><br><a href="index.html" style="color:var(--aliexpress-red)">عودة للمتجر</a>
-    </div>`;
-  } else {
-    const imgs = Array.isArray(product.image) ? product.image : [product.image];
+<div class="main-content">
     
-    // بناء الصور
-    let sliderHtml = "";
-    let dotsHtml = "";
-    imgs.forEach((img, index) => {
-      sliderHtml += `<img src="${img}">`;
-      if(imgs.length > 1) dotsHtml += `<div class="dot ${index === 0 ? 'active' : ''}"></div>`;
-    });
+    <div id="loading" class="loading-msg">جاري تحميل المنتج...</div>
 
-    let rawPrice = product.price.replace(/[^0-9.]/g, '');
-    let priceVal = parseFloat(rawPrice) || 0;
-    let fakeOldPrice = Math.floor(priceVal * 1.3);
-    
-    // 🔥🔥 هنا التعديل: توليد رقم بين 100 و 1000
-    // نستخدم الـ ID عشان الرقم يكون ثابت لنفس المنتج وما يتغير مع التحديث
-    // المعادلة: (ID * رقم عشوائي) % (النطاق) + الحد الأدنى
-    // النطاق هو 900 (من 0 إلى 899) + 100 = من 100 إلى 999
-    let soldCount = (product.id * 75) % 901 + 100;
+    <div id="productDetails" style="display:none;">
+        
+        <div class="product-images" id="imageSlider">
+            </div>
 
-    const description = product.description ? product.description : "لا يوجد وصف إضافي لهذا المنتج.";
+        <div class="details-card">
+            <div class="price-area">
+                <span class="currency">ر.ي</span>
+                <span class="price" id="displayPrice">0</span>
+                <span class="old-price" id="displayOldPrice">0 ر.ي</span>
+            </div>
+            <div class="product-name" id="displayName"></div>
+        </div>
 
-    container.innerHTML = `
-      <div class="hero-slider" id="slider" onscroll="updateDots()">
-        ${sliderHtml}
-      </div>
-      
-      ${imgs.length > 1 ? `<div class="dots" id="dotsContainer">${dotsHtml}</div>` : ''}
-
-      <div class="product-info-card">
-        <div class="price-row">
-          <span class="currency">ر.ي</span>
-          <span class="current-price">${priceVal.toLocaleString()}</span>
+        <div class="description-card">
+            <h3>وصف المنتج</h3>
+            <div class="description-text" id="displayDescription"></div>
         </div>
         
-        <div class="old-price-row">
-          <span class="old-price">${fakeOldPrice.toLocaleString()} ر.ي</span>
-          <span class="discount-label">-30%</span>
-        </div>
+    </div>
+</div>
 
-        <h1 class="product-title">${product.name}</h1>
+<div class="bottom-actions">
+    <button class="btn-cart" onclick="addToCartAndNotify(window.currentProductId)">🛒 أضف إلى السلة</button>
+    <button class="btn-buy" onclick="buyNow(window.currentProductId)">اشتر الآن</button>
+</div>
 
-        <div class="extra-stats">
-          <span>⭐ 4.8 (تقييمات)</span>
-          <span>تم بيع ${soldCount}+</span>
-        </div>
-      </div>
 
-      <div class="description-box">
-        <div class="sec-title">التفاصيل</div>
-        <div class="desc-text">${description}</div>
-      </div>
-      
-      <div style="height:20px;"></div>
+<script type="module">
+  // استيراد الدوال من روابط CDN
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, collection } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-      <div class="bottom-actions">
-        <button onclick="addToCart(${product.id})" class="action-btn btn-cart">
-          إضافة للسلة
-        </button>
-        <button onclick="orderViaWhatsapp()" class="action-btn btn-buy">
-          شراء الآن
-        </button>
-      </div>
-    `;
+  // مفاتيح مشروعك
+  const firebaseConfig = {
+    apiKey: "AIzaSyB5mEBB0plzw_d-gAth-TK0xR523IX6nGg",
+    authDomain: "my-fils-575be.firebaseapp.com",
+    projectId: "my-fils-575be",
+    storageBucket: "my-fils-575be.firebasestorage.app",
+    messagingSenderId: "670428095338",
+    appId: "1:670428095338:web:75d4a577cc648c208d7b13"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const productsCol = collection(db, "products");
+
+  // دالة جلب الآيدي من رابط URL
+  function getProductIdFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('id');
   }
 
-  /* تحديث النقاط عند السحب */
-  function updateDots() {
-    const slider = document.getElementById("slider");
-    const dots = document.querySelectorAll(".dot");
-    if(dots.length === 0) return;
+  // دالة عرض تفاصيل المنتج
+  async function fetchAndRenderProduct() {
+    const productId = getProductIdFromUrl();
+    window.currentProductId = productId; // حفظ الآيدي في متغير عام
+    
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('productDetails').style.display = 'none';
 
-    let index = Math.round(slider.scrollLeft / slider.offsetWidth);
-    index = Math.abs(index);
+    if (!productId) {
+      document.getElementById('loading').innerHTML = '❌ لم يتم تحديد المنتج.';
+      return;
+    }
+    
+    try {
+      // جلب وثيقة المنتج من فايربيس
+      const docRef = doc(db, "products", productId);
+      const docSnap = await getDoc(docRef);
 
-    dots.forEach(d => d.classList.remove("active"));
-    if(dots[index]) dots[index].classList.add("active");
+      if (docSnap.exists()) {
+        const p = docSnap.data();
+        
+        // 1. تحديث عنوان الصفحة والاسم
+        document.getElementById('productTitle').textContent = p.name;
+        document.getElementById('displayName').textContent = p.name;
+        
+        // 2. تحديث السعر والوصف
+        let rawPrice = p.price.toString().replace(/[^0-9.]/g, '');
+        let priceVal = parseFloat(rawPrice) || 0;
+        let fakeOldPrice = Math.floor(priceVal * 1.3); // سعر وهمي أعلى
+
+        document.getElementById('displayPrice').textContent = priceVal.toLocaleString();
+        document.getElementById('displayOldPrice').textContent = fakeOldPrice.toLocaleString() + " ر.ي";
+        document.getElementById('displayDescription').textContent = p.description || 'لا يوجد وصف لهذا المنتج.';
+        
+        // 3. عرض الصور
+        const slider = document.getElementById('imageSlider');
+        slider.innerHTML = '';
+        const dotsContainer = document.createElement('div');
+        dotsContainer.className = 'nav-dots';
+        
+        const images = Array.isArray(p.image) ? p.image : [p.image];
+        
+        images.forEach((imgSrc, index) => {
+            const img = document.createElement('img');
+            img.src = imgSrc;
+            if (index === 0) img.classList.add('active');
+            slider.appendChild(img);
+
+            const dot = document.createElement('span');
+            dot.className = 'dot';
+            if (index === 0) dot.classList.add('active');
+            dotsContainer.appendChild(dot);
+        });
+        
+        slider.appendChild(dotsContainer);
+        startSlider(slider, dotsContainer);
+        
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('productDetails').style.display = 'block';
+        
+      } else {
+        document.getElementById('loading').innerHTML = '❌ المنتج المطلوب غير موجود في السيرفر.';
+      }
+
+    } catch (e) {
+      console.error("Error fetching document: ", e);
+      document.getElementById('loading').innerHTML = '❌ حدث خطأ في الاتصال بقاعدة البيانات.';
+    }
+  }
+  
+  // تشغيل دالة الجلب عند تحميل الصفحة
+  fetchAndRenderProduct();
+
+  // ------------------------------------------------------------------
+  // دوال السلة (Cart Functions)
+  // ------------------------------------------------------------------
+  const WHATSAPP = "967773266534";
+  
+  function getProductDetails(id) {
+    // هذه الدالة يفترض أن تجلب اسم وسعر المنتج، لكن لأننا لا نجلب كل المنتجات هنا
+    // سنستخدم البيانات التي جلبناها من Firebase فقط
+    const name = document.getElementById('displayName').textContent;
+    const price = document.getElementById('displayPrice').textContent.replace(/,/g, '') + " ر.ي";
+    return { id, name, price };
   }
 
-  function addToCart(id) {
+  window.addToCartAndNotify = function(id) {
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
     let item = cart.find(p => p.id === id);
+    
     if(item) {
       item.qty++;
     } else {
-      cart.push({id: product.id, name: product.name, price: product.price, qty: 1});
+      const p = getProductDetails(id);
+      cart.push({id: p.id, name: p.name, price: p.price, qty: 1});
     }
-    localStorage.setItem("cart", JSON.stringify(cart));
     
-    updateHeaderBadge();
-    showToast();
+    localStorage.setItem("cart", JSON.stringify(cart));
+    alert("✅ تم إضافة المنتج إلى السلة!");
     navigator.vibrate?.(50);
   }
 
-  function updateHeaderBadge() {
-    let cart = JSON.parse(localStorage.getItem("cart")) || [];
-    let total = cart.reduce((acc, item) => acc + item.qty, 0);
-    const badge = document.getElementById("headerCartBadge");
-    if(total > 0) {
-      badge.style.display = "flex";
-      badge.textContent = total > 99 ? '99+' : total;
-    } else {
-      badge.style.display = "none";
-    }
-  }
-
-  function showToast() {
-    const toast = document.getElementById("toast");
-    toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 1500);
-  }
-
-  function orderViaWhatsapp() {
-    if(!product) return;
-    const msg = `مرحباً، أريد شراء هذا المنتج:\n\n*${product.name}*\nالسعر: ${product.price}\n\nالرابط: ${window.location.href}`;
+  window.buyNow = function(id) {
+    const p = getProductDetails(id);
+    const priceRaw = parseFloat(p.price.replace(/[^0-9.]/g, '')) || 0;
+    
+    let msg = `مرحباً، أريد طلب هذا المنتج فوراً:\n\n`;
+    msg += `*${p.name}*\n`;
+    msg += `السعر: ${priceRaw.toLocaleString()} ر.ي\n\n`;
+    msg += `*الرجاء إرسال تفاصيل التوصيل.*`;
+    
     window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`);
   }
 
-  updateHeaderBadge();
+  // دالة تشغيل السلايدر (إذا كان هناك أكثر من صورة)
+  function startSlider(slider, dotsContainer) {
+    const imgs = slider.querySelectorAll("img");
+    const dots = dotsContainer.querySelectorAll(".dot");
+    if(imgs.length <= 1) {
+        dotsContainer.style.display = 'none';
+        return;
+    }
+    
+    let index = 0;
+    setInterval(() => {
+        imgs[index].classList.remove("active");
+        dots[index].classList.remove("active");
+        
+        index = (index + 1) % imgs.length;
+        
+        imgs[index].classList.add("active");
+        dots[index].classList.add("active");
+    }, 3000);
+  }
+
 </script>
 
 </body>
 </html>
-
+ 
