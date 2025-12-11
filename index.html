@@ -3,8 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>متجر ابن المختار للأدوات</title>
+<title>ابن المختار للأدوات المنزلية</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<link rel="manifest" href="manifest.json">
 
 <style>
   :root {
@@ -22,7 +24,7 @@
   body {
     margin: 0; background: var(--bg-color); color: var(--text-color);
     font-family: 'Tajawal', sans-serif;
-    padding-bottom: 180px; /* زيادة المساحة للأزرار الجديدة */
+    padding-bottom: 180px; 
     padding-top: var(--total-header-height);
   }
 
@@ -161,13 +163,13 @@
     padding: 12px; border-radius: 99px; text-align: center; font-weight: bold; 
     font-size: 16px; border: none; margin-bottom: 10px;
   }
-  #checkoutBtnWhatsapp { /* زر واتساب القديم */
+  #checkoutBtnWhatsapp {
     background: linear-gradient(90deg, #FF8238, #FF4747); 
     color: #fff; 
     box-shadow: 0 4px 10px rgba(255, 71, 71, 0.3); 
   }
-  #checkoutBtnPage { /* زر التوجيه للصفحة الجديدة */
-    background: #4CAF50; /* أخضر */
+  #checkoutBtnPage { 
+    background: #4CAF50; 
     color: #fff; 
     box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
   }
@@ -323,12 +325,41 @@
   const cartBadge = document.getElementById("cartBadge");
   const emptyCartMsg = document.getElementById("emptyCartMsg");
   const checkoutSection = document.getElementById("checkoutSection");
-  const checkoutActionButtons = document.getElementById("checkoutActionButtons"); // زر الأكشن الجديد
+  const checkoutActionButtons = document.getElementById("checkoutActionButtons");
   
   const subTotalDisplay = document.getElementById("subTotalDisplay");
   const shippingDisplay = document.getElementById("shippingDisplay");
   const finalTotalDisplay = document.getElementById("finalTotalDisplay");
   const shippingSelect = document.getElementById("shippingSelect");
+
+  // 🔥 متغير الإضافة للشاشة الرئيسية
+  let deferredPrompt; 
+  const showPromptDelay = 3000; 
+
+  // ------------------------------------------------------------------
+  //  PWA / A2HS LOGIC
+  // ------------------------------------------------------------------
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // إظهار المطالبة بعد 3 ثواني من دخول المستخدم
+    setTimeout(() => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the A2HS prompt');
+                }
+                deferredPrompt = null;
+            });
+        }
+    }, showPromptDelay);
+  });
+  
+  // ------------------------------------------------------------------
+  //  APP FUNCTIONS
+  // ------------------------------------------------------------------
 
   window.onpageshow = function(event) {
     if (event.persisted || performance.navigation.type == 2) {
@@ -538,7 +569,6 @@
     window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`);
   }
   
-  // 🔥 دالة التوجيه لصفحة الدفع
   window.prepareAndRedirectToCheckout = function() {
       if(cart.length === 0) return;
       
@@ -552,7 +582,6 @@
       let finalTotal = productTotal + shippingCost;
       let shippingLocation = shippingSelect.options[shippingSelect.selectedIndex].text;
       
-      // حفظ ملخص الطلب في الذاكرة لنقله لصفحة checkout
       localStorage.setItem("checkoutSummary", JSON.stringify({
           subTotal: productTotal,
           finalTotal: finalTotal,
@@ -562,7 +591,6 @@
           }
       }));
       
-      // التوجيه إلى صفحة الدفع
       window.location.href = 'checkout.html';
   }
 
