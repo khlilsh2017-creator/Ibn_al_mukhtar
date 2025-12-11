@@ -1,6 +1,6 @@
 {
-  "name": "اسم متجرك الإلكتروني",
-  "short_name": "المتجر",
+  "name": " متجر ابن المختار للأدوات المنزلية ",
+  "short_name": "متجر ابن المختار ",
   "description": "متجر إلكتروني شامل لبيع المنتجات.",
   "start_url": "/index.html",
   "display": "standalone",
