@@ -395,6 +395,9 @@
   const db = getFirestore(app);
   const productsCol = collection(db, "products");
   const categoriesCol = collection(db, "categories"); 
+  
+  // 🔥🔥 متغير عام لتخزين مراقب التحميل الكسول 🔥🔥
+  let imgObserver = null; 
 
   // 🔥🔥 دالة جديدة لجلب وعرض التصنيفات من Firebase 🔥🔥
   async function fetchCategories() {
@@ -450,23 +453,30 @@
     }
   }
 
-  // 🔥🔥 دالة لإنشاء Intersection Observers (خاصة بالتحميل الكسول فقط) 🔥🔥
+  // 🔥🔥 دالة لإنشاء Intersection Observers (خاصة بالتحميل الكسول فقط) - تم تحسينها لـ Disconnect 🔥🔥
   function initObservers(){
-      // 1. Intersection Observer لتحميل الصور الكسول (Lazy Load)
-      const imgObserver = new IntersectionObserver((entries)=>{
+      // 1. إذا كان المراقب موجوداً، قم بإلغاء مراقبة جميع العناصر المتبقية
+      if (imgObserver) {
+          imgObserver.disconnect();
+      }
+      
+      // 2. إنشاء مراقب جديد
+      imgObserver = new IntersectionObserver((entries)=>{
         entries.forEach(entry=>{
           if(entry.isIntersecting){
             const img = entry.target;
             const src = img.dataset.src;
-            if (src) img.src = src; // تحميل الصورة
+            if (src) {
+                img.src = src; // تحميل الصورة
+                img.removeAttribute('data-src'); // إزالة data-src بعد التحميل
+            }
             imgObserver.unobserve(img);
           }
         });
-      }, { rootMargin: '0px 0px 100px 0px' }); // بدء التحميل قبل 100 بكسل من دخول الشاشة
+      }, { rootMargin: '0px 0px 100px 0px' }); 
 
+      // 3. مراقبة جميع الصور التي لا تزال تحتاج للتحميل
       document.querySelectorAll('img[data-src]').forEach(img => imgObserver.observe(img));
-
-      // 🔥🔥 تم حذف مراقب السلايدر التلقائي لتقليل الأداء 🔥🔥
   }
   
   // 🔥🔥 ربط initObservers بنافذة الوثيقة لتسهيل الوصول إليها من أي سكربت 🔥🔥
@@ -640,6 +650,8 @@
       renderProducts();
       cart = JSON.parse(localStorage.getItem("cart")||"[]") || [];
       updateCartBadge();
+      
+      // 🔥🔥 استدعاء initObservers لضمان تحميل جميع الصور عند العودة 🔥🔥
       setTimeout(window.initObservers, 100); 
       
       // 🔥🔥 وضع الشريط السفلي لوضع التنقل (ارتفاع 55px) 🔥🔥
@@ -720,7 +732,7 @@
     renderProducts();
   }
 
-  /* ====================== Manual Slider Control (جديد) ====================== */
+  /* ====================== Manual Slider Control (مفعل الآن) ====================== */
 
   // دالة عرض الصورة التالية في السلايدر
   function showNextImage(slider) {
@@ -853,13 +865,12 @@
 
         // عند اللمس (للأجهزة المحمولة) - نستخدم اللمس للتبديل يدوياً
         slider.addEventListener('touchstart', function(e) {
-            e.preventDefault(); // منع السلوك الافتراضي (مثل التمرير)
+            // e.preventDefault(); // تم إزالته لتجنب منع التمرير الطبيعي للشاشة
             showNextImage(this); // اعرض الصورة التالية عند كل لمسة
         });
 
         slider.addEventListener('touchend', function() {
             // يمكن تركها فارغة، التبديل يحدث فقط عند اللمس
-            // resetAndShowFirstImage(this); 
         });
     });
   }
