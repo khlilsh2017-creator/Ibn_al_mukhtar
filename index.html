@@ -450,7 +450,7 @@
     }
   }
 
-  // 🔥🔥 دالة لإنشاء Intersection Observers 🔥🔥
+  // 🔥🔥 دالة لإنشاء Intersection Observers (خاصة بالتحميل الكسول فقط) 🔥🔥
   function initObservers(){
       // 1. Intersection Observer لتحميل الصور الكسول (Lazy Load)
       const imgObserver = new IntersectionObserver((entries)=>{
@@ -466,22 +466,7 @@
 
       document.querySelectorAll('img[data-src]').forEach(img => imgObserver.observe(img));
 
-
-      // 2. Intersection Observer لتشغيل/إيقاف السلايدر (تقليل الأداء)
-      const sliderObserver = new IntersectionObserver((entries)=>{
-        entries.forEach(entry=>{
-          const slider = entry.target;
-          if(entry.isIntersecting){
-            // إذا كان ضمن العرض، ابدأ السلايدر
-            if(window.startSlider) window.startSlider(slider);
-          } else {
-            // إذا خرج من العرض، أوقف السلايدر
-            if(slider._intervalId) { clearInterval(slider._intervalId); slider._intervalId = null; }
-          }
-        });
-      }, { threshold: 0.1 }); // تشغيل إذا ظهر 10% من العنصر
-
-      document.querySelectorAll('.card-slider').forEach(slider => sliderObserver.observe(slider));
+      // 🔥🔥 تم حذف مراقب السلايدر التلقائي لتقليل الأداء 🔥🔥
   }
   
   // 🔥🔥 ربط initObservers بنافذة الوثيقة لتسهيل الوصول إليها من أي سكربت 🔥🔥
@@ -735,23 +720,40 @@
     renderProducts();
   }
 
-  // 🔥🔥 تحديث دالة بدء السلايدر لتقبل العنصر كمدخل 🔥🔥
-  window.startSlider = function(slider){
-    // نظف أي interval سابق
-    if(slider._intervalId) { clearInterval(slider._intervalId); slider._intervalId = null; }
+  /* ====================== Manual Slider Control (جديد) ====================== */
 
-    const imgs = slider.querySelectorAll("img");
-    if(!imgs || imgs.length <= 1) return;
-    let index = 0;
-    imgs.forEach((img,i)=> img.classList.toggle('active', i===0));
+  // دالة عرض الصورة التالية في السلايدر
+  function showNextImage(slider) {
+      const imgs = slider.querySelectorAll("img");
+      if (!imgs || imgs.length <= 1) return;
 
-    // ابدأ الحركة
-    slider._intervalId = setInterval(()=> {
-      imgs[index].classList.remove('active');
-      index = (index + 1) % imgs.length;
-      imgs[index].classList.add('active');
-    }, 3000);
+      let currentIndex = -1;
+      // البحث عن الصورة النشطة حالياً
+      imgs.forEach((img, i) => {
+          if (img.classList.contains('active')) {
+              currentIndex = i;
+          }
+          img.classList.remove('active');
+      });
+
+      // تحديد الفهرس التالي (إذا كان الأخير، نعود للأول)
+      let nextIndex = (currentIndex + 1) % imgs.length;
+      
+      // عرض الصورة التالية
+      imgs[nextIndex].classList.add('active');
   }
+
+  // دالة لتعيين أول صورة وعرضها عند دخول البطاقة
+  function resetAndShowFirstImage(slider) {
+      const imgs = slider.querySelectorAll("img");
+      if (!imgs || imgs.length <= 1) return;
+      
+      // إزالة النشاط عن الجميع
+      imgs.forEach(img => img.classList.remove('active'));
+      // تنشيط الصورة الأولى
+      imgs[0].classList.add('active');
+  }
+
 
   function drawItems(items){
     grid.innerHTML = "";
@@ -802,7 +804,9 @@
       const hash = getHashNumber(p.id || Math.random().toString(36).slice(2));
       const soldCount = (hash % 901) + 100;
 
-      sliderHTML = `<div class="card-slider" data-id="${p.id}" onclick="openProduct('${p.id}')">
+      // 🔥🔥 تم تعديل الكلاس وإضافة ID للسلايدر اليدوي 🔥🔥
+      const sliderId = `slider-${p.id}`; 
+      sliderHTML = `<div id="${sliderId}" class="card-slider manual-slider" data-id="${p.id}" onclick="openProduct('${p.id}')">
           ${sliderHTML}
           <div class="add-fab" title="أضف للسلة" onclick="event.stopPropagation(); addToCart('${p.id}')">+</div>
       </div>`;
@@ -830,8 +834,34 @@
       `;
       grid.appendChild(card);
     });
+    
+    // 🔥🔥 ربط الأحداث للسلايدر اليدوي (لمس/مرور) 🔥🔥
+    document.querySelectorAll('.manual-slider').forEach(slider => {
+        // عند المرور بالماوس (لأجهزة الحاسوب)
+        slider.addEventListener('mouseenter', function() {
+            resetAndShowFirstImage(this); // ابدأ من الصورة الأولى
+            this._mouseIntervalId = setInterval(() => {
+                showNextImage(this);
+            }, 600); // تبديل سريع كل 600 مللي ثانية
+        });
+        
+        slider.addEventListener('mouseleave', function() {
+            clearInterval(this._mouseIntervalId); // أوقف التبديل عند الخروج
+            this._mouseIntervalId = null;
+            resetAndShowFirstImage(this); // العودة للصورة الأولى
+        });
 
-    // لا حاجة لـ lazy-load أو بدء السلايدر هنا، سيتم التعامل معها بواسطة initObservers
+        // عند اللمس (للأجهزة المحمولة) - نستخدم اللمس للتبديل يدوياً
+        slider.addEventListener('touchstart', function(e) {
+            e.preventDefault(); // منع السلوك الافتراضي (مثل التمرير)
+            showNextImage(this); // اعرض الصورة التالية عند كل لمسة
+        });
+
+        slider.addEventListener('touchend', function() {
+            // يمكن تركها فارغة، التبديل يحدث فقط عند اللمس
+            // resetAndShowFirstImage(this); 
+        });
+    });
   }
 
   /* ====================== Product interactions ====================== */
