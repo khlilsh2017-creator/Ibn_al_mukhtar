@@ -257,7 +257,7 @@
   </div>
   <div class="nav-item" onclick="switchTab('cart')" style="position:relative">
     <div class="nav-badge" id="cartBadge" style="display:none">0</div>
-    <svg viewBox="0 0 24 24" width="22" height="22"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.之际.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+    <svg viewBox="0 0 24 24" width="22" height="22"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
     <span>السلة</span>
   </div>
 </div>
@@ -389,7 +389,7 @@
       document.getElementById('homeView').classList.add('active');
       document.querySelector('.nav-item:first-child').classList.add('active');
       renderProducts();
-      // 🔥 إخفاء أزرار إتمام الطلب عند العودة للصفحة الرئيسية
+      // إخفاء أزرار إتمام الطلب عند العودة للصفحة الرئيسية
       checkoutActionButtons.style.display = "none"; 
       cart = JSON.parse(localStorage.getItem("cart")||"[]") || [];
       updateCartBadge();
@@ -507,6 +507,11 @@
              <span class="discount-tag">-30%</span>
           </div>
           <div class="extra-info">تم بيع ${soldCount}+ قطعة</div>
+          
+          <div style="margin-top:8px; display:flex; gap:8px;">
+            <button style="flex:1; padding:8px; border-radius:8px; border:1px solid #eee; background:#fff; cursor:pointer;" onclick="event.stopPropagation(); quickViewById('${p.id}')">👁️ مشاهدة سريعة</button>
+            <button style="flex:1; padding:8px; border-radius:8px; border:0; background:var(--main-color); color:#fff; cursor:pointer;" onclick="event.stopPropagation(); addToCart('${p.id}')">أضف للسلة</button>
+          </div>
         </div>
       `;
       grid.appendChild(card);
@@ -559,8 +564,6 @@
     let total = cart.reduce((acc,it)=> acc + (it.qty||0), 0);
     cartBadge.style.display = total > 0 ? "block" : "none";
     cartBadge.textContent = total > 99 ? '99+' : total;
-    // show/hide checkout button area in cart view
-    // (We leave this logic here, but the switchTab now handles hiding on Home)
   }
 
   window.renderCart = function(){
