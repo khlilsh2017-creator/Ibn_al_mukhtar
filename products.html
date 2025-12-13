@@ -1,194 +1,126 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>إدارة المنتجات</title>
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title id="pageTitle">تحميل المنتج...</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --main-color: #007AFF;
+    --secondary-color: #FF8C00;
+    --bg-color: #f2f2f2;
+    --card-bg: #ffffff;
+    --text-color: #222;
+    --radius: 12px;
+  }
   
-  <style>
-    :root {
-      --primary: #c6a047;
-      --bg-color: #f8f9fa;
-      --card-bg: #ffffff;
-      --text-color: #333;
-      --danger: #dc3545;
-      --edit-bg: #e0f2f1; --edit-color: #00897b;
-      --delete-bg: #ffe5e5;
-    }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body {
-      font-family: 'Tajawal', sans-serif;
-      background: var(--bg-color); color: var(--text-color);
-      margin: 0; padding: 70px 0 40px;
-    }
-    
-    header {
-      position: fixed; top: 0; left: 0; right: 0;
-      height: 60px; background: #fff;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 1000;
-    }
-    header h1 { margin: 0; font-size: 18px; font-weight: 800; color: var(--primary); }
-    .home-link {
-      text-decoration: none; font-size: 14px; font-weight: bold; color: #333;
-      background: #eee; padding: 6px 15px; border-radius: 20px;
-    }
-    
-    .container { max-width: 800px; margin: 0 auto; padding: 16px; }
-    
-    .card {
-      background: var(--card-bg); border-radius: 16px;
-      padding: 20px; margin-bottom: 20px;
-      border: 1px solid #f0f0f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-    }
-    h2 { margin-top: 0; font-size: 16px; color: var(--primary); border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; margin-bottom: 15px; }
+  /* PWA Styles */
+  html,body{ height:100%; margin:0; font-family:'Tajawal',sans-serif; background:var(--bg-color); color:var(--text-color); }
+  body{ padding-bottom: 80px; }
+  
+  /* Header for PWA (Back button) */
+  .app-header{
+    position:sticky; top:0; left:0; right:0;
+    background:var(--card-bg); 
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px; box-shadow:0 1px 5px rgba(0,0,0,0.05); z-index:10;
+  }
+  .back-btn{
+    background:none; border:none; color:var(--main-color); font-size:16px; font-weight:700; cursor:pointer;
+  }
+  
+  main{ padding:15px; max-width: 800px; margin: 0 auto; }
 
-    /* البحث */
-    .search-box { position: relative; margin-bottom: 20px; }
-    .search-box input {
-        width: 100%; padding: 12px 40px 12px 12px;
-        border-radius: 12px; border: 1px solid #ddd;
-        font-family: inherit; font-size: 14px; outline: none;
-    }
-    .search-icon { position: absolute; right: 12px; top: 12px; color: #999; }
+  /* Product Slider/Image */
+  .product-image-container{ 
+    width:100%; 
+    padding-top:100%; /* 1:1 Aspect Ratio */
+    position:relative; 
+    background:#fff; 
+    border-radius:var(--radius); 
+    overflow:hidden;
+    margin-bottom:15px;
+  }
+  .product-image-container img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  }
 
-    /* القائمة */
-    .product-row {
-        display: flex; align-items: center; justify-content: space-between;
-        background: #fff; padding: 12px; margin-bottom: 12px;
-        border-radius: 12px; border: 1px solid #eee;
-    }
-    .p-info { display: flex; align-items: center; gap: 12px; flex-grow: 1; }
-    .p-img {
-        width: 50px; height: 50px; border-radius: 8px;
-        object-fit: cover; background: #eee; border: 1px solid #ddd;
-    }
-    .p-details div:first-child { font-weight: bold; font-size: 14px; margin-bottom: 4px; }
-    .p-details div:last-child { font-size: 12px; color: var(--primary); font-weight: 700; }
+  /* Details and Price */
+  .details-box{ background:var(--card-bg); padding:15px; border-radius:var(--radius); margin-bottom:15px; }
+  h1{ margin-top:0; font-size:24px; color:var(--text-color); }
+  .price-area{ display:flex; align-items:baseline; gap:8px; margin-bottom:15px; }
+  .price{ font-size:28px; font-weight:800; color:#FF0000; }
+  .currency{ font-size:14px; font-weight:700; color:#FF0000; }
+  .description{ color:#555; line-height:1.6; font-size:15px; }
 
-    .product-actions { display: flex; gap: 8px; flex-shrink: 0; }
-    .btn-action {
-        padding: 8px 14px; border-radius: 8px; border: none;
-        font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap;
-    }
-    .btn-edit { background: var(--edit-bg); color: var(--edit-color); }
-    .btn-delete { background: var(--delete-bg); color: var(--danger); }
+  /* Action Bar (Fixed Bottom) */
+  .action-bar{
+    position:fixed; bottom:0; left:0; right:0;
+    background:var(--card-bg);
+    padding:10px 15px;
+    box-shadow:0 -2px 10px rgba(0,0,0,0.1);
+    display:flex; gap:10px;
+    z-index:100;
+  }
+  .add-to-cart-btn{
+    flex:1; padding:14px; border-radius:99px; border:0;
+    background:var(--main-color); color:#fff; font-size:16px; font-weight:800;
+    cursor:pointer;
+  }
+  .whatsapp-btn{
+    width:60px; height:60px; border-radius:50%; border:0;
+    background:#25D366; color:#fff; font-size:24px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    box-shadow:0 4px 12px rgba(37,211,102,0.3);
+  }
 
-    .load-more-btn {
-        display: block; width: 100%; padding: 12px;
-        background: #eee; color: #555; border: none;
-        border-radius: 12px; font-weight: bold; cursor: pointer;
-        margin-top: 15px; text-align: center;
-    }
-    .hidden { display: none; }
+  /* Dark Mode */
+  .dark body{ background:#0f1113; color:#e6e6e6; }
+  .dark .app-header, .dark .details-box, .dark .action-bar{ 
+      background:#111214; 
+      box-shadow:0 -2px 10px rgba(255,255,255,0.05);
+  }
+  .dark h1{ color:#eee; }
+  .dark .description{ color:#bbb; }
+  .dark .add-to-cart-btn{ background:var(--main-color); }
+  .dark .back-btn{ color:var(--secondary-color); }
 
-    /* المودال */
-    .modal {
-        display: none; position: fixed; z-index: 2000;
-        left: 0; top: 0; width: 100%; height: 100%;
-        background-color: rgba(0,0,0,0.6); backdrop-filter: blur(3px);
-        align-items: center; justify-content: center;
-    }
-    .modal-content {
-        background: #fff; padding: 20px; border-radius: 16px;
-        width: 90%; max-width: 500px; position: relative;
-        max-height: 90vh; overflow-y: auto;
-    }
-    .close-btn {
-        position: absolute; top: 15px; right: 15px;
-        background: none; border: none; font-size: 24px; cursor: pointer; color: #999;
-    }
-    
-    label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: bold; color: #666; }
-    .input-field {
-        width: 100%; padding: 12px; border-radius: 10px;
-        border: 1px solid #ddd; background: #fafafa;
-        margin-bottom: 12px; font-family: inherit; font-size: 14px;
-    }
-
-    /* صور التعديل */
-    .upload-area {
-        border: 2px dashed #ccc; padding: 15px;
-        text-align: center; border-radius: 10px;
-        cursor: pointer; margin-bottom: 10px; background: #fdfdfd;
-    }
-    .thumbs-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 15px; }
-    .thumb-wrapper { position: relative; flex-shrink: 0; }
-    .thumb-wrapper img { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 1px solid #eee; }
-    .thumb-remove {
-        position: absolute; top: -6px; right: -6px;
-        background: var(--danger); color: #fff;
-        border: none; border-radius: 50%; width: 20px; height: 20px;
-        font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;
-    }
-
-    .btn-save-main {
-        width: 100%; padding: 14px; background: var(--primary);
-        color: #fff; border: none; border-radius: 12px;
-        font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;
-    }
-  </style>
+  /* Loading State */
+  .loading-msg{ text-align:center; padding:50px; color:#999; }
+</style>
 </head>
 <body>
 
-<header>
-  <h1>إدارة المنتجات</h1>
-  <a href="admin.html" class="home-link">رجوع للرئيسية 🏠</a>
-</header>
-
-<div class="container">
-  <div class="card">
-    <h2>📦 قائمة المنتجات (<span id="count">0</span>)</h2>
-    
-    <div class="search-box">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="ابحث في السيرفر..." oninput="handleSearch(this.value)">
-    </div>
-
-    <div id="productsList"></div>
-    
-    <button id="loadMoreBtn" class="load-more-btn hidden" onclick="loadNextBatch()">⬇️ عرض 10 منتجات أخرى</button>
-    <div id="loadingMsg" style="text-align:center; color:#777; margin-top:10px; display:none;">جاري التحميل...</div>
-  </div>
+<div class="app-header">
+    <button class="back-btn" onclick="goBack()">← العودة للمتجر</button>
+    <span id="productNameHeader" style="font-weight:600; font-size:14px;"></span>
 </div>
 
-<div id="editModal" class="modal">
-    <div class="modal-content">
-        <button class="close-btn" onclick="closeModal()">&times;</button>
-        <h2>✏️ تعديل المنتج</h2>
-        
-        <input type="hidden" id="editProductId">
-        <label>اسم المنتج</label>
-        <input type="text" id="editName" class="input-field">
-        <label>السعر</label>
-        <input type="number" id="editPrice" class="input-field">
-        <label>التصنيف</label>
-        <select id="editCategorySelect" class="input-field"></select>
-        <label>الوصف</label>
-        <textarea id="editDesc" class="input-field" rows="3"></textarea>
+<main id="productDetails">
+    <div class="loading-msg">جاري تحميل بيانات المنتج...</div>
+</main>
 
-        <label>إضافة صور جديدة</label>
-        <div class="upload-area" onclick="document.getElementById('editImagesInput').click()">
-            📷 اضغط هنا لاختيار صور
-        </div>
-        <input type="file" id="editImagesInput" accept="image/*" multiple style="display:none;">
-        <div id="newImagesPreview" class="thumbs-container"></div>
-
-        <label>الصور الحالية (اضغط X للحذف)</label>
-        <div id="currentImagesPreview" class="thumbs-container"></div>
-        
-        <button id="saveBtn" class="btn-save-main" onclick="submitEditProduct()">حفظ التعديلات</button>
-    </div>
+<div class="action-bar">
+    <button id="addToCartBtn" class="add-to-cart-btn" onclick="addToCartAndNotify(this)" data-id="">
+        🛒 أضف للسلة
+    </button>
+    <button id="whatsappBtn" class="whatsapp-btn" onclick="sendInquiry(this)" data-id="">
+        💬
+    </button>
 </div>
+
 
 <script type="module">
+  // 🔥🔥 استيراد Firebase و Global State المشترك 🔥🔥
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc, query, limit, startAfter, orderBy, startAt, endAt } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-  
-  // 🔥 بيانات مشروعك
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
   const firebaseConfig = {
-    apiKey: "AIzaSyB5mEBB0plzw_d-gAth-TK0xR523IX6nGg",
+    apiKey: "AIzaSyB5mEBB0plplzw_d-gAth-TK0xR523IX6nGg", // تأكد من مفتاح API الخاص بك
     authDomain: "my-fils-575be.firebaseapp.com",
     projectId: "my-fils-575be",
     storageBucket: "my-fils-575be.firebasestorage.app",
@@ -198,274 +130,146 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  const productsCol = collection(db, "products");
-  const categoriesCol = collection(db, "categories");
 
-  let lastVisibleDoc = null;
-  // 🔥🔥🔥 تحديد عدد المنتجات بـ 10 🔥🔥🔥
-  const PRODUCTS_PER_PAGE = 10;
-  let isFetching = false;
-  let searchTimeout = null;
+  const WHATSAPP = "967773266534";
+  
+  // 🔥🔥🔥 منطق التحويل للريال السعودي (ثابت هنا) 🔥🔥🔥
+  const SAR_RATE = 140; 
+  const currentCurrency = localStorage.getItem('currentCurrency') || 'YER'; 
 
-  // ==========================================
-  // 1. التحميل (نظام الدفعات)
-  // ==========================================
-  async function loadFirstBatch() {
-      document.getElementById('productsList').innerHTML = "";
-      lastVisibleDoc = null;
-      document.getElementById('loadMoreBtn').classList.add('hidden');
-      await fetchProducts();
+  function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
   }
 
-  window.loadNextBatch = async function() {
-      await fetchProducts();
+  function goBack() {
+      // يعود للصفحة الرئيسية (index.html)
+      window.location.href = 'index.html';
   }
+  window.goBack = goBack; // لجعلها متاحة في HTML
 
-  async function fetchProducts() {
-      if (isFetching) return;
-      isFetching = true;
-      document.getElementById('loadingMsg').style.display = 'block';
-
+  // 🔥🔥🔥 دالة لعرض المنتج 🔥🔥🔥
+  async function renderProduct(productId) {
+      const detailsContainer = document.getElementById('productDetails');
+      const docRef = doc(db, "products", productId);
+      
       try {
-          let q;
-          if (!lastVisibleDoc) {
-              q = query(productsCol, orderBy("createdAt", "desc"), limit(PRODUCTS_PER_PAGE));
-          } else {
-              q = query(productsCol, orderBy("createdAt", "desc"), startAfter(lastVisibleDoc), limit(PRODUCTS_PER_PAGE));
-          }
+          const docSnap = await getDoc(docRef);
 
-          const snapshot = await getDocs(q);
-
-          if (!snapshot.empty) {
-              lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
-              const products = [];
-              snapshot.forEach(doc => products.push({ id: doc.id, ...doc.data() }));
-
-              appendProductsToScreen(products);
+          if (docSnap.exists()) {
+              const product = docSnap.data();
               
-              if (snapshot.docs.length === PRODUCTS_PER_PAGE) {
-                  document.getElementById('loadMoreBtn').classList.remove('hidden');
-              } else {
-                  document.getElementById('loadMoreBtn').classList.add('hidden');
+              // 1. تحديد السعر والعملة
+              let rawPrice = (product.price || "").toString().replace(/[^0-9.]/g, '');
+              let priceVal = parseFloat(rawPrice) || 0;
+              
+              let displayPrice = priceVal.toLocaleString();
+              let displayCurrency = 'ر.ي';
+
+              if (currentCurrency === 'SAR') {
+                  displayPrice = Math.ceil(priceVal / SAR_RATE).toLocaleString();
+                  displayCurrency = 'ر.س';
               }
+
+              // 2. تحديث DOM
+              document.getElementById('pageTitle').innerText = product.name || 'تفاصيل المنتج';
+              document.getElementById('productNameHeader').innerText = product.name || 'تفاصيل المنتج';
+              
+              const imageSrc = Array.isArray(product.image) ? product.image[0] : (product.image || 'placeholder.png');
+              
+              detailsContainer.innerHTML = `
+                  <div class="product-image-container">
+                      <img src="${imageSrc}" alt="${product.name}" loading="eager">
+                  </div>
+                  <div class="details-box">
+                      <h1>${product.name || 'منتج غير معروف'}</h1>
+                      <div class="price-area">
+                          <span class="currency">${displayCurrency}</span>
+                          <span class="price">${displayPrice}</span>
+                      </div>
+                      <p class="description">${product.description || 'لا يتوفر وصف لهذا المنتج حالياً.'}</p>
+                      
+                      <div style="margin-top:20px; font-size:14px; color:#999;">
+                          رمز المنتج: ${productId}
+                      </div>
+                  </div>
+              `;
+              
+              // 3. ربط أزرار الإجراءات بالـ ID
+              document.getElementById('addToCartBtn').dataset.id = productId;
+              document.getElementById('whatsappBtn').dataset.id = productId;
+
           } else {
-              if (!lastVisibleDoc) {
-                  document.getElementById('productsList').innerHTML = '<p style="text-align:center">لا توجد منتجات.</p>';
-              }
-              document.getElementById('loadMoreBtn').classList.add('hidden');
+              detailsContainer.innerHTML = `<div class="loading-msg">عذراً، لم يتم العثور على المنتج.</div>`;
           }
       } catch (e) {
-          console.log("Fetching error:", e);
-          if(e.message.includes("index")) {
-               const qFallback = query(productsCol, limit(PRODUCTS_PER_PAGE));
-               const snap = await getDocs(qFallback);
-               const prods = [];
-               snap.forEach(d => prods.push({id: d.id, ...d.data()}));
-               appendProductsToScreen(prods);
-          }
-      } finally {
-          isFetching = false;
-          document.getElementById('loadingMsg').style.display = 'none';
-          updateCount();
+          console.error("Error fetching document: ", e);
+          detailsContainer.innerHTML = `<div class="loading-msg">حدث خطأ في تحميل البيانات.</div>`;
       }
   }
 
-  function appendProductsToScreen(products) {
-      const listDiv = document.getElementById('productsList');
-      products.forEach(p => {
-          const thumb = (p.image && p.image.length > 0) ? p.image[0] : '';
-          const pData = encodeURIComponent(JSON.stringify(p));
-
-          const row = document.createElement('div');
-          row.className = 'product-row';
-          row.innerHTML = `
-              <div class="p-info">
-                  <img src="${thumb}" class="p-img">
-                  <div class="p-details">
-                      <div>${p.name}</div>
-                      <div>${p.price}</div>
-                  </div>
-              </div>
-              <div class="product-actions">
-                  <button class="btn-action btn-edit" onclick="openEdit('${pData}')">تعديل</button>
-                  <button class="btn-action btn-delete" onclick="deleteProd('${p.id}')">حذف</button>
-              </div>
-          `;
-          listDiv.appendChild(row);
-      });
-  }
-
-  function updateCount() {
-      const count = document.getElementById('productsList').children.length;
-      document.getElementById('count').textContent = count;
-  }
-
-  // ==========================================
-  // 2. البحث (السيرفر)
-  // ==========================================
-  window.handleSearch = function(text) {
-      clearTimeout(searchTimeout);
-      const term = text.trim();
-      if(term === "") { loadFirstBatch(); return; }
-
-      searchTimeout = setTimeout(async () => {
-          const listDiv = document.getElementById('productsList');
-          listDiv.innerHTML = '<div style="text-align:center; color:#999;">جاري البحث...</div>';
-          document.getElementById('loadMoreBtn').classList.add('hidden');
-
-          try {
-              const q = query(productsCol, orderBy('name'), startAt(term), endAt(term + '\uf8ff'), limit(20));
-              const snapshot = await getDocs(q);
-              listDiv.innerHTML = "";
-              if (snapshot.empty) {
-                  listDiv.innerHTML = '<div style="text-align:center;">لا توجد نتائج.</div>';
-              } else {
-                  const results = [];
-                  snapshot.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
-                  appendProductsToScreen(results);
-              }
-              updateCount();
-          } catch (e) { console.error(e); }
-      }, 500);
-  }
-
-  // ==========================================
-  // 3. التعديل وإدارة الصور
-  // ==========================================
-  
-  let currentImages = [];
-  let newImagesToAdd = [];
-
-  window.openEdit = function(encodedData) {
-      const p = JSON.parse(decodeURIComponent(encodedData));
+  // 🔥🔥🔥 دالة الإضافة للسلة (مشابهة لما في index.html) 🔥🔥🔥
+  async function addToCartAndNotify(btn) {
+      const id = btn.dataset.id;
+      if (!id) return;
       
-      document.getElementById('editProductId').value = p.id;
-      document.getElementById('editName').value = p.name;
-      document.getElementById('editPrice').value = p.price;
-      document.getElementById('editDesc').value = p.description || '';
+      let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+      let item = cart.find(p => p.id === id);
       
-      loadCategories(p.category);
+      let product;
+      if (!item) {
+          // جلب بيانات المنتج من جديد إذا لم تكن في السلة
+          const docRef = doc(db, "products", id);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+               product = docSnap.data();
+               cart.push({ id: id, name: product.name, price: product.price, qty: 1 });
+          }
+      } else {
+          item.qty++;
+      }
       
-      currentImages = p.image || [];
-      renderCurrentImages();
-
-      newImagesToAdd = [];
-      document.getElementById('editImagesInput').value = '';
-      document.getElementById('newImagesPreview').innerHTML = '';
+      localStorage.setItem("cart", JSON.stringify(cart));
       
-      document.getElementById('editModal').style.display = 'flex';
+      // إشعار بسيط
+      btn.innerHTML = '✅ أُضيف للسلة!';
+      btn.style.backgroundColor = '#4CAF50';
+      setTimeout(() => {
+          btn.innerHTML = '🛒 أضف للسلة';
+          btn.style.backgroundColor = 'var(--main-color)';
+      }, 1500);
+      
+      navigator.vibrate?.(40);
   }
+  window.addToCartAndNotify = addToCartAndNotify;
 
-  window.closeModal = function() {
-      document.getElementById('editModal').style.display = 'none';
+
+  // 🔥🔥🔥 دالة إرسال استفسار واتساب 🔥🔥🔥
+  function sendInquiry(btn) {
+      const id = btn.dataset.id;
+      const productName = document.getElementById('pageTitle').innerText.replace(' | تفاصيل المنتج', '');
+      const msg = `مرحباً، أرغب في الاستفسار عن المنتج التالي:\n*${productName}*\n\nرمز المنتج: ${id}`;
+      window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`);
   }
+  window.sendInquiry = sendInquiry;
 
-  document.getElementById("editImagesInput").addEventListener("change", function () {
-    const files = [...this.files];
-    const previewBox = document.getElementById("newImagesPreview");
-    
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const base64String = e.target.result;
-        newImagesToAdd.push(base64String);
 
-        const img = document.createElement("img");
-        img.src = base64String;
-        img.style.cssText = "width:70px; height:70px; border-radius:8px; border:1px solid #ddd; flex-shrink:0;";
-        previewBox.appendChild(img);
-      };
-      reader.readAsDataURL(file);
-    });
+  // 🔥🔥🔥 بدء التحميل عند فتح الصفحة 🔥🔥🔥
+  document.addEventListener('DOMContentLoaded', () => {
+      // Dark Mode Check (مأخوذ من index.html)
+      if (localStorage.getItem('dark') === '1') {
+          document.documentElement.classList.add('dark');
+      }
+
+      const id = getQueryParam('id');
+      if (id) {
+          renderProduct(id);
+      } else {
+          document.getElementById('productDetails').innerHTML = `<div class="loading-msg">خطأ: لم يتم تحديد معرف المنتج.</div>`;
+      }
   });
 
-  function renderCurrentImages() {
-      const box = document.getElementById('currentImagesPreview');
-      box.innerHTML = '';
-      currentImages.forEach((url, idx) => {
-          const div = document.createElement('div');
-          div.className = 'thumb-wrapper';
-          div.innerHTML = `<img src="${url}"><button class="thumb-remove" onclick="removeCurrentImage(${idx})">×</button>`;
-          box.appendChild(div);
-      });
-  }
-
-  window.removeCurrentImage = function(idx) {
-      if(!confirm("حذف الصورة؟")) return;
-      currentImages.splice(idx, 1);
-      renderCurrentImages();
-  }
-
-  window.submitEditProduct = async function() {
-      const btn = document.getElementById('saveBtn');
-      const id = document.getElementById('editProductId').value;
-      if(!id) return;
-
-      btn.disabled = true;
-      btn.textContent = "جاري الحفظ...";
-
-      try {
-          const finalImages = [...currentImages, ...newImagesToAdd];
-
-          await updateDoc(doc(db, "products", id), {
-              name: document.getElementById('editName').value,
-              price: document.getElementById('editPrice').value,
-              category: document.getElementById('editCategorySelect').value,
-              description: document.getElementById('editDesc').value,
-              image: finalImages,
-              updatedAt: new Date()
-          });
-
-          alert("✅ تم التعديل بنجاح!");
-          closeModal();
-          if(!document.getElementById('searchInput').value) loadFirstBatch();
-
-      } catch (e) {
-          alert("خطأ: " + e.message);
-      } finally {
-          btn.disabled = false;
-          btn.textContent = "حفظ التعديلات";
-      }
-  }
-
-  // ==========================================
-  // 4. الحذف والتصنيفات
-  // ==========================================
-  window.deleteProd = async function(id) {
-      if(!confirm("هل أنت متأكد من الحذف النهائي؟")) return;
-      try {
-          await deleteDoc(doc(db, "products", id));
-          loadFirstBatch(); 
-      } catch(e) {
-          alert("خطأ: " + e.message);
-      }
-  }
-
-  async function loadCategories(selectedCat) {
-      try {
-          const snap = await getDocs(categoriesCol);
-          const select = document.getElementById('editCategorySelect');
-          select.innerHTML = '';
-          snap.forEach(doc => {
-              const opt = document.createElement('option');
-              opt.value = doc.data().name;
-              opt.textContent = doc.data().name;
-              select.appendChild(opt);
-          });
-          if(selectedCat) select.value = selectedCat;
-      } catch(e) { console.log(e); }
-  }
-
-  loadFirstBatch();
-
-  window.loadNextBatch = loadNextBatch;
-  window.handleSearch = handleSearch;
-  window.openEdit = openEdit;
-  window.closeModal = closeModal;
-  window.removeCurrentImage = removeCurrentImage;
-  window.submitEditProduct = submitEditProduct;
-  window.deleteProd = deleteProd;
-
 </script>
+
 </body>
 </html>
