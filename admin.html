@@ -139,9 +139,8 @@
 
   <div class="card">
     <h2>📦 إدارة وعرض المنتجات</h2>
-    <p style="font-size: 14px; color: #555; margin-bottom: 15px;">انقر على الزر أدناه لعرض وتعديل وحذف المنتجات المخزنة حالياً في المتجر.</p>
-    <a href="products_list.html" class="btn-primary" style="text-align: center; display: block; text-decoration: none;">
-        عرض وإدارة المنتجات
+    <a href="products_list.html" class="btn-primary" style="display: block; text-align: center; text-decoration: none;">
+        الذهاب إلى قائمة المنتجات ⬅️
     </a>
   </div>
 
@@ -152,13 +151,11 @@
   <img class="modal-content" id="proofImage">
 </div>
 
-
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
   import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
-  // 🔥 بيانات مشروعك (يرجى تحديثها)
+  // 🔥 بيانات مشروعك
   const firebaseConfig = {
     apiKey: "AIzaSyB5mEBB0plzw_d-gAth-TK0xR523IX6nGg",
     authDomain: "my-fils-575be.firebaseapp.com",
@@ -170,15 +167,14 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  const storage = getStorage(app); 
-  
   const productsCol = collection(db, "products"); 
   const ordersCol = collection(db, "orders"); 
   const categoriesCol = collection(db, "categories");
 
-  let selectedFiles = []; 
+  let selectedImages = [];
   let lastOrderCount = 0; 
   let audio = new Audio('https://notificationsounds.com/storage/sounds/file-sounds/26540-bell-ding.mp3');
+  
   let categories = []; 
 
   // ------------------------------------------------------------------
@@ -223,6 +219,7 @@
   function updateCategorySelectors() {
       const addSelect = document.getElementById('categorySelect');
       
+      // مسح الخيارات القديمة
       addSelect.innerHTML = '';
 
       categories.forEach(cat => {
@@ -265,18 +262,19 @@
 
 
   // ------------------------------------------------------------------
-  // 2. إدارة المنتجات (الإضافة فقط)
+  // 2. إدارة المنتجات (إضافة فقط)
   // ------------------------------------------------------------------
 
   document.getElementById("imagesInput").addEventListener("change", function () {
-    selectedFiles = [...this.files]; 
+    selectedImages = [];
     document.getElementById("previewBox").innerHTML = "";
+    const files = [...this.files];
+    if(files.length > 0) document.querySelector('.upload-box span:last-child').textContent = `تم اختيار ${files.length} صور`;
 
-    if(selectedFiles.length > 0) document.querySelector('.upload-box span:last-child').textContent = `تم اختيار ${selectedFiles.length} صور`;
-
-    selectedFiles.forEach(file => {
+    files.forEach(file => {
       const reader = new FileReader();
       reader.onload = e => {
+        selectedImages.push(e.target.result);
         const img = document.createElement("img");
         img.src = e.target.result;
         document.getElementById("previewBox").appendChild(img);
@@ -296,40 +294,14 @@
       alert("❌ يرجى تعبئة اسم المنتج والسعر على الأقل");
       return;
     }
-    if (selectedFiles.length === 0) { 
-        alert("❌ يرجى اختيار صور المنتج.");
-        return;
-    }
 
-
-    btn.textContent = "جاري رفع الصور..."; 
+    btn.textContent = "جاري الرفع للسيرفر...";
     btn.disabled = true;
-    
-    try {
-      const imageURLs = [];
-      
-      // رفع الصور بالتسلسل لضمان حفظ الروابط بالترتيب
-      for (let i = 0; i < selectedFiles.length; i++) {
-          const file = selectedFiles[i];
-          
-          const fileExtension = file.name.split('.').pop();
-          const storagePath = `products_images/${Date.now()}-${i}-${Math.random().toString(36).substring(2)}.${fileExtension}`;
-          const storageRef = ref(storage, storagePath);
 
-          await uploadBytes(storageRef, file);
-          const url = await getDownloadURL(storageRef);
-          imageURLs.push(url); // حفظ الرابط بالترتيب
-          
-          btn.textContent = `جاري رفع الصورة ${i + 1} من ${selectedFiles.length}...`;
-      }
-      
-      btn.textContent = "جاري حفظ بيانات المنتج...";
+    try {
       await addDoc(productsCol, {
-        name: name, price: price, description: description, category: category, 
-        image: imageURLs, // حفظ مصفوفة الروابط المرتبة
-        createdAt: new Date()
+        name: name, price: price, description: description, category: category, image: selectedImages, createdAt: new Date()
       });
-      
       alert("✅ تم الحفظ بنجاح!");
       location.reload(); 
     } catch (e) {
@@ -339,7 +311,7 @@
       btn.disabled = false;
     }
   }
-
+  
   // ------------------------------------------------------------------
   // 3. إدارة الطلبات الجديدة + الاشعارات
   // ------------------------------------------------------------------
@@ -422,6 +394,7 @@
       }
   }
 
+  // وظيفة عرض الإشعار في نافذة منبثقة
   window.showProof = function(base64Image) {
       const modal = document.getElementById("proofModal");
       const image = document.getElementById("proofImage");
@@ -429,6 +402,7 @@
       modal.style.display = "block";
   }
 
+  // وظيفة تشغيل التنبيه
   function triggerAlert(newCount) {
       audio.play();
       const alertBox = document.getElementById('newOrderAlert');
@@ -440,6 +414,7 @@
       }, 5000);
   }
 
+  // وظائف الإجراءات
   window.markAsProcessed = async function(id) {
       if(!confirm("هل أنت متأكد من وضع علامة 'تمت المعالجة' على هذا الطلب؟")) return;
       try {
@@ -464,10 +439,9 @@
        }
   }
 
+  // المراقبة والتحديث
   setInterval(renderOrders, 10000); 
 
-  fetchCategories();
+  fetchCategories(); // ابدأ بتحميل التصنيفات أولاً
   renderOrders();
 </script>
-</body>
-</html>
