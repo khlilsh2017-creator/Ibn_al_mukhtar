@@ -116,6 +116,22 @@
         </div>
   </div>
   
+  <div class="card" style="border-color:var(--primary);">
+    <h2>💰 إعدادات الخصم والعملة (Global Settings)</h2>
+    
+    <div class="admin-input-group">
+        <label for="discountPercentInput">نسبة الخصم المئوية (<span style="color:var(--danger)">مطبقة على الإجمالي الفرعي</span>):</label>
+        <input type="number" id="discountPercentInput" min="0" max="100" value="0" placeholder="مثلاً: 5 لـ 5%">
+    </div>
+
+    <div class="admin-input-group">
+        <label for="minAmountInput">الحد الأدنى لتفعيل الخصم (بالريال اليمني):</label>
+        <input type="number" id="minAmountInput" min="0" value="0" placeholder="مثلاً: 20000">
+    </div>
+
+    <button class="btn-primary" onclick="saveGlobalSettings()">حفظ إعدادات الخصم</button>
+    <div id="settingsMessage" style="margin-top:15px; font-size:13px;"></div>
+  </div>
   <div class="card">
     <h2>➕ إضافة منتج جديد</h2>
     <label>اسم المنتج</label>
@@ -152,10 +168,11 @@
 </div>
 
 <script type="module">
+  // 🔥🔥 استيراد setDoc و getDoc 🔥🔥
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-  // 🔥 بيانات مشروعك
+  // 🔥 بيانات مشروعك (تأكد من صحتها)
   const firebaseConfig = {
     apiKey: "AIzaSyB5mEBB0plzw_d-gAth-TK0xR523IX6nGg",
     authDomain: "my-fils-575be.firebaseapp.com",
@@ -170,6 +187,7 @@
   const productsCol = collection(db, "products"); 
   const ordersCol = collection(db, "orders"); 
   const categoriesCol = collection(db, "categories");
+  const settingsDocRef = doc(db, "settings", "global"); // مرجع لإعدادات الخصم
 
   let selectedImages = [];
   let lastOrderCount = 0; 
@@ -189,6 +207,7 @@
           updateCategorySelectors();
       } catch (e) {
           console.error("Error fetching categories:", e);
+          // في حال فشل الاتصال، يتم استخدام تصنيفات افتراضية
           categories = [
               { id: '1', name: 'أدوات منزلية' },
               { id: '2', name: 'إلكترونيات' }
@@ -221,6 +240,9 @@
       
       // مسح الخيارات القديمة
       addSelect.innerHTML = '';
+      
+      // إضافة خيار افتراضي
+      addSelect.innerHTML = '<option value="">-- اختر تصنيف --</option>';
 
       categories.forEach(cat => {
           const option = new Option(cat.name, cat.name);
@@ -294,6 +316,10 @@
       alert("❌ يرجى تعبئة اسم المنتج والسعر على الأقل");
       return;
     }
+    if (!category) {
+        alert("❌ يرجى اختيار تصنيف للمنتج.");
+        return;
+    }
 
     btn.textContent = "جاري الرفع للسيرفر...";
     btn.disabled = true;
@@ -313,7 +339,60 @@
   }
   
   // ------------------------------------------------------------------
-  // 3. إدارة الطلبات الجديدة + الاشعارات
+  // 3. إدارة الإعدادات العامة (الخصم)
+  // ------------------------------------------------------------------
+  
+  async function fetchGlobalSettingsForAdmin() {
+      try {
+          const docSnap = await getDoc(settingsDocRef);
+          if (docSnap.exists()) {
+              const data = docSnap.data();
+              document.getElementById('discountPercentInput').value = data.discountPercentage || 0;
+              document.getElementById('minAmountInput').value = data.minAmountForDiscount || 0;
+          }
+      } catch (e) {
+          console.error("Error loading global settings:", e);
+      }
+  }
+
+  window.saveGlobalSettings = async function() {
+      const discountPercentage = parseFloat(document.getElementById('discountPercentInput').value) || 0;
+      const minAmountForDiscount = parseFloat(document.getElementById('minAmountInput').value) || 0;
+      const messageBox = document.getElementById('settingsMessage');
+      const btn = document.querySelector('.card button[onclick="saveGlobalSettings()"]');
+
+      btn.textContent = "جاري الحفظ...";
+      btn.disabled = true;
+
+      try {
+          // استخدام setDoc لحفظ الإعدادات، مما ينشئ المستند إن لم يكن موجوداً
+          await setDoc(settingsDocRef, {
+              discountPercentage: discountPercentage,
+              minAmountForDiscount: minAmountForDiscount
+          });
+
+          messageBox.style.color = 'var(--success)';
+          messageBox.textContent = '✅ تم حفظ إعدادات الخصم بنجاح!';
+          
+          setTimeout(() => {
+            btn.textContent = "حفظ إعدادات الخصم";
+            btn.disabled = false;
+            messageBox.textContent = '';
+          }, 2000);
+          
+      } catch (e) {
+          messageBox.style.color = 'var(--danger)';
+          messageBox.textContent = '❌ فشل الحفظ: ' + e.message;
+          console.error("Error saving global settings:", e);
+          
+          btn.textContent = "حفظ إعدادات الخصم";
+          btn.disabled = false;
+      }
+  }
+
+
+  // ------------------------------------------------------------------
+  // 5. إدارة الطلبات الجديدة + الاشعارات
   // ------------------------------------------------------------------
 
   async function renderOrders() {
@@ -321,7 +400,7 @@
       
       try {
           const snapshot = await getDocs(ordersCol); 
-          const activeOrders = snapshot.docs.filter(doc => doc.data().orderStatus === 'جديد');
+          const activeOrders = snapshot.docs.filter(doc => doc.data().orderStatus === 'جديد').map(doc => ({ id: doc.id, ...doc.data() }));
 
           if (lastOrderCount > 0 && activeOrders.length > lastOrderCount) {
               triggerAlert(activeOrders.length - lastOrderCount);
@@ -335,10 +414,12 @@
               box.innerHTML = `<div class="no-orders">لا توجد طلبات جديدة حالياً.</div>`;
               return;
           }
+          
+          // فرز الطلبات من الأحدث للأقدم
+          activeOrders.sort((a, b) => (new Date(b.orderTime)) - (new Date(a.orderTime)));
 
-          activeOrders.forEach(docSnap => {
-              const order = docSnap.data();
-              const orderId = docSnap.id;
+          activeOrders.forEach(order => {
+              const orderId = order.id;
               
               const itemsList = order.items.map(item => 
                 `<li>${item.name} (عدد: ${item.qty})</li>`
@@ -348,6 +429,13 @@
               
               const showProofBtn = order.paymentProof && order.paymentMethod !== 'الدفع عند الاستلام' ? 
                 `<button class="action-btn btn-proof" onclick="showProof('${order.paymentProof}')">📷 عرض إشعار الدفع</button>` : '';
+
+              // عرض الخصم إذا كان موجوداً
+              let discountLine = '';
+              if (order.discountAmount && order.discountAmount > 0) {
+                  const discountPercent = (order.discountAmount / order.subTotal * 100).toFixed(0);
+                  discountLine = `<p style="color:var(--danger); font-weight:700;">💰 الخصم (${discountPercent}%): -${order.discountAmount.toLocaleString()} ر.ي</p>`;
+              }
 
               const orderCard = document.createElement('div');
               orderCard.className = 'order-card';
@@ -368,6 +456,11 @@
                     
                     <p style="font-weight:700; margin-top:10px;">قائمة الطلبات:</p>
                     <ul class="item-list">${itemsList}</ul>
+                    
+                    <hr style="border:none; border-top:1px dotted #ccc; margin: 10px 0;">
+                    <p>📦 إجمالي المنتجات: ${order.subTotal.toLocaleString()} ر.ي</p>
+                    ${discountLine}
+                    <p>🚚 رسوم الشحن: +${order.shippingCost.toLocaleString()} ر.ي</p>
                     
                     <p class="total-price">
                         الإجمالي النهائي: ${order.finalTotal.toLocaleString()} ر.ي
@@ -442,6 +535,7 @@
   // المراقبة والتحديث
   setInterval(renderOrders, 10000); 
 
-  fetchCategories(); // ابدأ بتحميل التصنيفات أولاً
-  renderOrders();
+  fetchGlobalSettingsForAdmin(); // 🔥🔥 ابدأ بجلب إعدادات الخصم
+  fetchCategories(); // ثم تحميل التصنيفات
+  renderOrders(); // وعرض الطلبات
 </script>
