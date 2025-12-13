@@ -7,7 +7,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
   
   <style>
-    /* نفس التنسيقات السابقة */
     :root {
       --primary: #c6a047;
       --bg-color: #f8f9fa;
@@ -45,6 +44,7 @@
     }
     h2 { margin-top: 0; font-size: 16px; color: var(--primary); border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; margin-bottom: 15px; }
 
+    /* البحث */
     .search-box { position: relative; margin-bottom: 20px; }
     .search-box input {
         width: 100%; padding: 12px 40px 12px 12px;
@@ -53,6 +53,7 @@
     }
     .search-icon { position: absolute; right: 12px; top: 12px; color: #999; }
 
+    /* القائمة */
     .product-row {
         display: flex; align-items: center; justify-content: space-between;
         background: #fff; padding: 12px; margin-bottom: 12px;
@@ -80,7 +81,6 @@
         border-radius: 12px; font-weight: bold; cursor: pointer;
         margin-top: 15px; text-align: center;
     }
-    .load-more-btn:hover { background: #e0e0e0; }
     .hidden { display: none; }
 
     /* المودال */
@@ -107,6 +107,12 @@
         margin-bottom: 12px; font-family: inherit; font-size: 14px;
     }
 
+    /* صور التعديل */
+    .upload-area {
+        border: 2px dashed #ccc; padding: 15px;
+        text-align: center; border-radius: 10px;
+        cursor: pointer; margin-bottom: 10px; background: #fdfdfd;
+    }
     .thumbs-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 15px; }
     .thumb-wrapper { position: relative; flex-shrink: 0; }
     .thumb-wrapper img { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 1px solid #eee; }
@@ -128,7 +134,7 @@
 
 <header>
   <h1>إدارة المنتجات</h1>
-  <a href="admin_dashboard.html" class="home-link">رجوع للرئيسية 🏠</a>
+  <a href="admin.html" class="home-link">رجوع للرئيسية 🏠</a>
 </header>
 
 <div class="container">
@@ -137,7 +143,7 @@
     
     <div class="search-box">
         <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="ابحث في السيرفر (اضغط Enter أو اكتب)..." oninput="handleSearch(this.value)">
+        <input type="text" id="searchInput" placeholder="ابحث في السيرفر..." oninput="handleSearch(this.value)">
     </div>
 
     <div id="productsList"></div>
@@ -162,6 +168,13 @@
         <label>الوصف</label>
         <textarea id="editDesc" class="input-field" rows="3"></textarea>
 
+        <label>إضافة صور جديدة</label>
+        <div class="upload-area" onclick="document.getElementById('editImagesInput').click()">
+            📷 اضغط هنا لاختيار صور
+        </div>
+        <input type="file" id="editImagesInput" accept="image/*" multiple style="display:none;">
+        <div id="newImagesPreview" class="thumbs-container"></div>
+
         <label>الصور الحالية (اضغط X للحذف)</label>
         <div id="currentImagesPreview" class="thumbs-container"></div>
         
@@ -171,8 +184,9 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc, query, limit, startAfter, orderBy, where, startAt, endAt } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc, query, limit, startAfter, orderBy, startAt, endAt } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
   
+  // 🔥 بيانات مشروعك
   const firebaseConfig = {
     apiKey: "AIzaSyB5mEBB0plzw_d-gAth-TK0xR523IX6nGg",
     authDomain: "my-fils-575be.firebaseapp.com",
@@ -187,16 +201,14 @@
   const productsCol = collection(db, "products");
   const categoriesCol = collection(db, "categories");
 
-  // المتغيرات
   let lastVisibleDoc = null;
-  const PRODUCTS_PER_PAGE = 10; // 🔥 تم التعديل إلى 10
+  const PRODUCTS_PER_PAGE = 10;
   let isFetching = false;
-  let searchTimeout = null; // لتأخير البحث قليلاً أثناء الكتابة
+  let searchTimeout = null;
 
   // ==========================================
-  // 1. نظام التحميل العادي (التدريجي)
+  // 1. التحميل (نظام الدفعات)
   // ==========================================
-  
   async function loadFirstBatch() {
       document.getElementById('productsList').innerHTML = "";
       lastVisibleDoc = null;
@@ -211,10 +223,7 @@
   async function fetchProducts() {
       if (isFetching) return;
       isFetching = true;
-      
-      const loadBtn = document.getElementById('loadMoreBtn');
-      const loadingMsg = document.getElementById('loadingMsg');
-      loadingMsg.style.display = 'block';
+      document.getElementById('loadingMsg').style.display = 'block';
 
       try {
           let q;
@@ -228,107 +237,40 @@
 
           if (!snapshot.empty) {
               lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
-              
               const products = [];
               snapshot.forEach(doc => products.push({ id: doc.id, ...doc.data() }));
 
               appendProductsToScreen(products);
               
               if (snapshot.docs.length === PRODUCTS_PER_PAGE) {
-                  loadBtn.classList.remove('hidden');
+                  document.getElementById('loadMoreBtn').classList.remove('hidden');
               } else {
-                  loadBtn.classList.add('hidden');
+                  document.getElementById('loadMoreBtn').classList.add('hidden');
               }
           } else {
-              loadBtn.classList.add('hidden');
               if (!lastVisibleDoc) {
                   document.getElementById('productsList').innerHTML = '<p style="text-align:center">لا توجد منتجات.</p>';
               }
+              document.getElementById('loadMoreBtn').classList.add('hidden');
           }
       } catch (e) {
-          console.error(e);
-          // في حال لم يكن هناك Index، سنحاول جلب البيانات بدون ترتيب مؤقتاً
+          console.log("Fetching error:", e);
           if(e.message.includes("index")) {
-              alert("جاري فهرسة البيانات (Index) لترتيبها حسب الوقت، يرجى المحاولة لاحقاً. سيتم العرض عشوائياً الآن.");
-              const qFallback = query(productsCol, limit(PRODUCTS_PER_PAGE));
-              const snap = await getDocs(qFallback);
-              const prods = [];
-              snap.forEach(d => prods.push({id: d.id, ...d.data()}));
-              appendProductsToScreen(prods);
-          } else {
-              alert("خطأ: " + e.message);
+               const qFallback = query(productsCol, limit(PRODUCTS_PER_PAGE));
+               const snap = await getDocs(qFallback);
+               const prods = [];
+               snap.forEach(d => prods.push({id: d.id, ...d.data()}));
+               appendProductsToScreen(prods);
           }
       } finally {
           isFetching = false;
-          loadingMsg.style.display = 'none';
+          document.getElementById('loadingMsg').style.display = 'none';
           updateCount();
       }
   }
-
-  // ==========================================
-  // 2. نظام البحث في السيرفر (Server-Side Search)
-  // ==========================================
-  
-  window.handleSearch = function(text) {
-      clearTimeout(searchTimeout);
-      const term = text.trim();
-      
-      // إذا كان الحقل فارغاً، نرجع للوضع العادي
-      if(term === "") {
-          loadFirstBatch();
-          return;
-      }
-
-      // تأخير البحث نصف ثانية لعدم الضغط على السيرفر
-      searchTimeout = setTimeout(() => {
-          searchInFirestore(term);
-      }, 500);
-  }
-
-  async function searchInFirestore(term) {
-      const listDiv = document.getElementById('productsList');
-      const loadBtn = document.getElementById('loadMoreBtn');
-      
-      listDiv.innerHTML = '<div style="text-align:center; color:#999;">جاري البحث في السيرفر...</div>';
-      loadBtn.classList.add('hidden'); // إخفاء زر المزيد أثناء البحث
-
-      try {
-          // البحث بالبداية (Prefix Search)
-          // ملاحظة: هذا يتطلب أن يكون الاسم مكتوباً بدقة
-          const q = query(
-              productsCol, 
-              orderBy('name'), 
-              startAt(term), 
-              endAt(term + '\uf8ff'),
-              limit(20) // حد أقصى لنتائج البحث
-          );
-
-          const snapshot = await getDocs(q);
-          listDiv.innerHTML = ""; // مسح رسالة الانتظار
-
-          if (snapshot.empty) {
-              listDiv.innerHTML = '<div style="text-align:center;">لا توجد نتائج مطابقة في السيرفر.</div>';
-          } else {
-              const results = [];
-              snapshot.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
-              appendProductsToScreen(results);
-          }
-          
-          updateCount();
-
-      } catch (e) {
-          console.error(e);
-          listDiv.innerHTML = `<div style="text-align:center; color:red;">خطأ في البحث: ${e.message}</div>`;
-      }
-  }
-
-  // ==========================================
-  // دوال مساعدة
-  // ==========================================
 
   function appendProductsToScreen(products) {
       const listDiv = document.getElementById('productsList');
-      
       products.forEach(p => {
           const thumb = (p.image && p.image.length > 0) ? p.image[0] : '';
           const pData = encodeURIComponent(JSON.stringify(p));
@@ -358,10 +300,40 @@
   }
 
   // ==========================================
-  // 3. التعديل والحذف
+  // 2. البحث (السيرفر)
+  // ==========================================
+  window.handleSearch = function(text) {
+      clearTimeout(searchTimeout);
+      const term = text.trim();
+      if(term === "") { loadFirstBatch(); return; }
+
+      searchTimeout = setTimeout(async () => {
+          const listDiv = document.getElementById('productsList');
+          listDiv.innerHTML = '<div style="text-align:center; color:#999;">جاري البحث...</div>';
+          document.getElementById('loadMoreBtn').classList.add('hidden');
+
+          try {
+              const q = query(productsCol, orderBy('name'), startAt(term), endAt(term + '\uf8ff'), limit(20));
+              const snapshot = await getDocs(q);
+              listDiv.innerHTML = "";
+              if (snapshot.empty) {
+                  listDiv.innerHTML = '<div style="text-align:center;">لا توجد نتائج.</div>';
+              } else {
+                  const results = [];
+                  snapshot.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
+                  appendProductsToScreen(results);
+              }
+              updateCount();
+          } catch (e) { console.error(e); }
+      }, 500);
+  }
+
+  // ==========================================
+  // 3. التعديل وإدارة الصور (طريقة Base64)
   // ==========================================
   
   let currentImages = [];
+  let newImagesToAdd = [];
 
   window.openEdit = function(encodedData) {
       const p = JSON.parse(decodeURIComponent(encodedData));
@@ -372,8 +344,13 @@
       document.getElementById('editDesc').value = p.description || '';
       
       loadCategories(p.category);
+      
       currentImages = p.image || [];
       renderCurrentImages();
+
+      newImagesToAdd = [];
+      document.getElementById('editImagesInput').value = '';
+      document.getElementById('newImagesPreview').innerHTML = '';
       
       document.getElementById('editModal').style.display = 'flex';
   }
@@ -382,13 +359,29 @@
       document.getElementById('editModal').style.display = 'none';
   }
 
+  // تحويل الصور المختارة إلى أكواد فوراً
+  document.getElementById("editImagesInput").addEventListener("change", function () {
+    const files = [...this.files];
+    const previewBox = document.getElementById("newImagesPreview");
+    
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const base64String = e.target.result;
+        newImagesToAdd.push(base64String);
+
+        const img = document.createElement("img");
+        img.src = base64String;
+        img.style.cssText = "width:70px; height:70px; border-radius:8px; border:1px solid #ddd; flex-shrink:0;";
+        previewBox.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+
   function renderCurrentImages() {
       const box = document.getElementById('currentImagesPreview');
       box.innerHTML = '';
-      if(currentImages.length === 0) {
-          box.innerHTML = '<span style="font-size:12px; color:#999;">لا توجد صور</span>';
-          return;
-      }
       currentImages.forEach((url, idx) => {
           const div = document.createElement('div');
           div.className = 'thumb-wrapper';
@@ -403,6 +396,7 @@
       renderCurrentImages();
   }
 
+  // حفظ التعديلات
   window.submitEditProduct = async function() {
       const btn = document.getElementById('saveBtn');
       const id = document.getElementById('editProductId').value;
@@ -412,35 +406,38 @@
       btn.textContent = "جاري الحفظ...";
 
       try {
+          // دمج الصور
+          const finalImages = [...currentImages, ...newImagesToAdd];
+
           await updateDoc(doc(db, "products", id), {
               name: document.getElementById('editName').value,
               price: document.getElementById('editPrice').value,
               category: document.getElementById('editCategorySelect').value,
               description: document.getElementById('editDesc').value,
-              image: currentImages,
+              image: finalImages,
               updatedAt: new Date()
           });
 
-          alert("✅ تم التعديل!");
+          alert("✅ تم التعديل بنجاح!");
           closeModal();
-          // إعادة تحميل القائمة الحالية لتحديث البيانات
-          const searchVal = document.getElementById('searchInput').value;
-          if(searchVal) handleSearch(searchVal);
-          else loadFirstBatch();
+          
+          if(!document.getElementById('searchInput').value) loadFirstBatch();
 
       } catch (e) {
-          alert("خطأ: " + e.message);
+          alert("خطأ (قد يكون حجم الصور كبيراً جداً): " + e.message);
       } finally {
           btn.disabled = false;
           btn.textContent = "حفظ التعديلات";
       }
   }
 
+  // ==========================================
+  // 4. الحذف والتصنيفات
+  // ==========================================
   window.deleteProd = async function(id) {
       if(!confirm("هل أنت متأكد من الحذف النهائي؟")) return;
       try {
           await deleteDoc(doc(db, "products", id));
-          // إخفاء العنصر المحذوف من الشاشة فوراً
           loadFirstBatch(); 
       } catch(e) {
           alert("خطأ: " + e.message);
@@ -462,10 +459,8 @@
       } catch(e) { console.log(e); }
   }
 
-  // بدء التشغيل
   loadFirstBatch();
-  
-  // إتاحة الدوال
+
   window.loadNextBatch = loadNextBatch;
   window.handleSearch = handleSearch;
   window.openEdit = openEdit;
