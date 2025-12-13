@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>قائمة وإدارة المنتجات</title>
+  <title>إدارة المنتجات</title>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
   
   <style>
@@ -12,136 +12,181 @@
       --bg-color: #f8f9fa;
       --card-bg: #ffffff;
       --text-color: #333;
-      --danger: #ff4d4d;
-      --success: #4CAF50;
-      --warning: #ff9800;
-      --aliexpress-red: #FF4747;
+      --danger: #dc3545;
+      --edit-bg: #e0f2f1; --edit-color: #00897b;
+      --delete-bg: #ffe5e5;
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
       font-family: 'Tajawal', sans-serif;
       background: var(--bg-color); color: var(--text-color);
-      margin: 0; padding: 0; padding-top: 70px; padding-bottom: 40px;
+      margin: 0; padding: 70px 0 40px;
     }
+    
     header {
       position: fixed; top: 0; left: 0; right: 0;
       height: 60px; background: #fff;
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 100;
+      padding: 0 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 1000;
     }
     header h1 { margin: 0; font-size: 18px; font-weight: 800; color: var(--primary); }
     .home-link {
       text-decoration: none; font-size: 14px; font-weight: bold; color: #333;
-      background: #eee; padding: 6px 12px; border-radius: 20px;
+      background: #eee; padding: 6px 15px; border-radius: 20px;
     }
-    .container { max-width: 900px; margin: 0 auto; padding: 16px; }
+    
+    .container { max-width: 800px; margin: 0 auto; padding: 16px; }
+    
     .card {
-      background: var(--card-bg); border-radius: 20px;
-      padding: 20px; margin-bottom: 24px;
+      background: var(--card-bg); border-radius: 16px;
+      padding: 20px; margin-bottom: 20px;
       border: 1px solid #f0f0f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);
     }
     h2 { margin-top: 0; font-size: 16px; color: var(--primary); border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; margin-bottom: 15px; }
-    
-    /* تنسيق عرض المنتجات */
-    .product-row { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #f0f0f0; }
-    .p-info { display: flex; align-items: center; gap: 10px; }
-    .p-img { 
-        width: 60px !important; 
-        height: 60px !important; 
-        max-width: 60px !important; 
-        border-radius: 8px; 
-        object-fit: cover; 
-        background: #eee; 
-        flex-shrink: 0; 
-    }
-    .p-name { font-size: 14px; font-weight: bold; color: #333; }
-    .p-price { font-size: 12px; color: var(--primary); }
-    
-    /* أزرار الإجراء للمنتجات */
-    .product-actions { display: flex; gap: 8px; }
-    .btn-edit { background: #e0f2f1; color: #00897b; border: none; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; }
-    .btn-delete { background: #ffe5e5; color: var(--danger); border: none; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; }
 
-    /* تنسيق إدخال وحفظ التعديل */
-    label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 13px; color: #555; }
-    input, textarea, select {
-      width: 100%; padding: 12px; border-radius: 12px;
-      border: 1px solid #eee; background: #f9f9f9;
-      font-family: inherit; margin-bottom: 16px; font-size: 14px;
+    /* البحث */
+    .search-box { position: relative; margin-bottom: 20px; }
+    .search-box input {
+        width: 100%; padding: 12px 40px 12px 12px;
+        border-radius: 12px; border: 1px solid #ddd;
+        font-family: inherit; font-size: 14px; outline: none;
     }
-    .btn-primary { 
-        width: 100%; padding: 14px; background: var(--primary); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(198,160,71,0.3); 
+    .search-icon { position: absolute; right: 12px; top: 12px; color: #999; }
+
+    /* القائمة */
+    .product-row {
+        display: flex; align-items: center; justify-content: space-between;
+        background: #fff; padding: 12px; margin-bottom: 12px;
+        border-radius: 12px; border: 1px solid #eee;
     }
-    .btn-primary:active { opacity: 0.8; }
+    .p-info { display: flex; align-items: center; gap: 12px; flex-grow: 1; }
+    .p-img {
+        width: 50px; height: 50px; border-radius: 8px;
+        object-fit: cover; background: #eee; border: 1px solid #ddd;
+    }
+    .p-details div:first-child { font-weight: bold; font-size: 14px; margin-bottom: 4px; }
+    .p-details div:last-child { font-size: 12px; color: var(--primary); font-weight: 700; }
+
+    .product-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-action {
+        padding: 8px 14px; border-radius: 8px; border: none;
+        font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap;
+    }
+    .btn-edit { background: var(--edit-bg); color: var(--edit-color); }
+    .btn-delete { background: var(--delete-bg); color: var(--danger); }
+
+    .load-more-btn {
+        display: block; width: 100%; padding: 12px;
+        background: #eee; color: #555; border: none;
+        border-radius: 12px; font-weight: bold; cursor: pointer;
+        margin-top: 15px; text-align: center;
+    }
+    .hidden { display: none; }
+
+    /* المودال */
+    .modal {
+        display: none; position: fixed; z-index: 2000;
+        left: 0; top: 0; width: 100%; height: 100%;
+        background-color: rgba(0,0,0,0.6); backdrop-filter: blur(3px);
+        align-items: center; justify-content: center;
+    }
+    .modal-content {
+        background: #fff; padding: 20px; border-radius: 16px;
+        width: 90%; max-width: 500px; position: relative;
+        max-height: 90vh; overflow-y: auto;
+    }
+    .close-btn {
+        position: absolute; top: 15px; right: 15px;
+        background: none; border: none; font-size: 24px; cursor: pointer; color: #999;
+    }
     
-    /* الـ Modal */
-    .modal { display: none; position: fixed; z-index: 500; padding-top: 60px; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.9); }
-    #editModalContent { background: #fff; padding: 20px; border-radius: 12px; width: 90%; max-width: 500px; margin: 50px auto; position: relative; }
-    .btn-close-edit { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 20px; cursor: pointer; }
-    
-    /* تنسيق معاينة الصور */
-    .thumbs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; }
-    .thumbs img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; border: 1px solid #eee; flex-shrink: 0; }
-    .upload-box { border: 2px dashed #ddd; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; margin-bottom: 16px; background: #fafafa; }
-    /* تنسيق صور التعديل الحالي مع زر الحذف */
-    .edit-thumbs img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; border: 1px solid #eee; flex-shrink: 0; }
+    label { display: block; margin-bottom: 6px; font-size: 12px; font-weight: bold; color: #666; }
+    .input-field {
+        width: 100%; padding: 12px; border-radius: 10px;
+        border: 1px solid #ddd; background: #fafafa;
+        margin-bottom: 12px; font-family: inherit; font-size: 14px;
+    }
+
+    /* صور التعديل */
+    .upload-area {
+        border: 2px dashed #ccc; padding: 15px;
+        text-align: center; border-radius: 10px;
+        cursor: pointer; margin-bottom: 10px; background: #fdfdfd;
+    }
+    .thumbs-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 15px; }
+    .thumb-wrapper { position: relative; flex-shrink: 0; }
+    .thumb-wrapper img { width: 70px; height: 70px; border-radius: 8px; object-fit: cover; border: 1px solid #eee; }
+    .thumb-remove {
+        position: absolute; top: -6px; right: -6px;
+        background: var(--danger); color: #fff;
+        border: none; border-radius: 50%; width: 20px; height: 20px;
+        font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+
+    .btn-save-main {
+        width: 100%; padding: 14px; background: var(--primary);
+        color: #fff; border: none; border-radius: 12px;
+        font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;
+    }
   </style>
 </head>
 <body>
 
 <header>
   <h1>إدارة المنتجات</h1>
-  <a href="admin_dashboard.html" class="home-link">لوحة التحكم ⚙️</a>
+  <a href="admin.html" class="home-link">رجوع للرئيسية 🏠</a>
 </header>
 
 <div class="container">
-  
   <div class="card">
-    <h2>📦 المنتجات في السيرفر (<span id="count">0</span>)</h2>
-    <div id="productsList">جاري تحميل المنتجات...</div>
-  </div>
+    <h2>📦 قائمة المنتجات (<span id="count">0</span>)</h2>
+    
+    <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="ابحث في السيرفر..." oninput="handleSearch(this.value)">
+    </div>
 
+    <div id="productsList"></div>
+    
+    <button id="loadMoreBtn" class="load-more-btn hidden" onclick="loadNextBatch()">⬇️ عرض 10 منتجات أخرى</button>
+    <div id="loadingMsg" style="text-align:center; color:#777; margin-top:10px; display:none;">جاري التحميل...</div>
+  </div>
 </div>
 
-<div id="editModal" class="modal" style="display:none;">
-    <div id="editModalContent">
-        <button class="btn-close-edit" onclick="document.getElementById('editModal').style.display='none'">&times;</button>
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal()">&times;</button>
         <h2>✏️ تعديل المنتج</h2>
+        
         <input type="hidden" id="editProductId">
-
         <label>اسم المنتج</label>
-        <input type="text" id="editName">
-        
+        <input type="text" id="editName" class="input-field">
         <label>السعر</label>
-        <input type="text" id="editPrice">
-        
-        <label>التصنيف الحالي</label>
-        <select id="editCategorySelect"></select>
-
+        <input type="number" id="editPrice" class="input-field">
+        <label>التصنيف</label>
+        <select id="editCategorySelect" class="input-field"></select>
         <label>الوصف</label>
-        <textarea id="editDesc"></textarea>
+        <textarea id="editDesc" class="input-field" rows="3"></textarea>
 
         <label>إضافة صور جديدة</label>
-        <div class="upload-box" onclick="document.getElementById('editImagesInput').click()" style="margin-bottom: 5px;">
-          <span class="upload-icon">📷</span>
-          <span class="upload-text">اضغط لاختيار صور لإضافتها</span>
+        <div class="upload-area" onclick="document.getElementById('editImagesInput').click()">
+            📷 اضغط هنا لاختيار صور
         </div>
         <input type="file" id="editImagesInput" accept="image/*" multiple style="display:none;">
-        <div class="thumbs" id="editPreviewBoxNew" style="margin-bottom: 16px;"></div>
+        <div id="newImagesPreview" class="thumbs-container"></div>
 
-        <label>الصور الحالية (اضغط على 'x' لحذف صورة)</label>
-        <div class="edit-thumbs" id="editCurrentImages" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px;"></div>
+        <label>الصور الحالية (اضغط X للحذف)</label>
+        <div id="currentImagesPreview" class="thumbs-container"></div>
         
-        <button class="btn-primary" onclick="submitEditProduct()">حفظ التعديلات</button>
+        <button id="saveBtn" class="btn-save-main" onclick="submitEditProduct()">حفظ التعديلات</button>
     </div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
-  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
-
-
+  import { getFirestore, collection, getDocs, deleteDoc, doc, updateDoc, query, limit, startAfter, orderBy, startAt, endAt } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+  
+  // 🔥 بيانات مشروعك
   const firebaseConfig = {
     apiKey: "AIzaSyB5mEBB0plzw_d-gAth-TK0xR523IX6nGg",
     authDomain: "my-fils-575be.firebaseapp.com",
@@ -153,291 +198,274 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  const storage = getStorage(app); 
-
-  const productsCol = collection(db, "products"); 
+  const productsCol = collection(db, "products");
   const categoriesCol = collection(db, "categories");
-  let categories = []; 
-  
-  let selectedFilesForEdit = []; // الملفات الجديدة المضافة للتعديل
-  let currentImageURLs = [];     // قائمة مسارات الصور الحالية للمنتج
 
-  // ------------------------------------------------------------------
-  // 1. منطق التصنيفات (لتعديل قائمة الاختيار)
-  // ------------------------------------------------------------------
+  let lastVisibleDoc = null;
+  // 🔥🔥🔥 تحديد عدد المنتجات بـ 10 🔥🔥🔥
+  const PRODUCTS_PER_PAGE = 10;
+  let isFetching = false;
+  let searchTimeout = null;
 
-  async function fetchCategories() {
+  // ==========================================
+  // 1. التحميل (نظام الدفعات)
+  // ==========================================
+  async function loadFirstBatch() {
+      document.getElementById('productsList').innerHTML = "";
+      lastVisibleDoc = null;
+      document.getElementById('loadMoreBtn').classList.add('hidden');
+      await fetchProducts();
+  }
+
+  window.loadNextBatch = async function() {
+      await fetchProducts();
+  }
+
+  async function fetchProducts() {
+      if (isFetching) return;
+      isFetching = true;
+      document.getElementById('loadingMsg').style.display = 'block';
+
       try {
-          const snapshot = await getDocs(categoriesCol);
-          categories = snapshot.docs.map(doc => ({ id: doc.id, name: doc.data().name }));
-          updateCategorySelectors();
+          let q;
+          if (!lastVisibleDoc) {
+              q = query(productsCol, orderBy("createdAt", "desc"), limit(PRODUCTS_PER_PAGE));
+          } else {
+              q = query(productsCol, orderBy("createdAt", "desc"), startAfter(lastVisibleDoc), limit(PRODUCTS_PER_PAGE));
+          }
+
+          const snapshot = await getDocs(q);
+
+          if (!snapshot.empty) {
+              lastVisibleDoc = snapshot.docs[snapshot.docs.length - 1];
+              const products = [];
+              snapshot.forEach(doc => products.push({ id: doc.id, ...doc.data() }));
+
+              appendProductsToScreen(products);
+              
+              if (snapshot.docs.length === PRODUCTS_PER_PAGE) {
+                  document.getElementById('loadMoreBtn').classList.remove('hidden');
+              } else {
+                  document.getElementById('loadMoreBtn').classList.add('hidden');
+              }
+          } else {
+              if (!lastVisibleDoc) {
+                  document.getElementById('productsList').innerHTML = '<p style="text-align:center">لا توجد منتجات.</p>';
+              }
+              document.getElementById('loadMoreBtn').classList.add('hidden');
+          }
       } catch (e) {
-          console.error("Error fetching categories:", e);
-          categories = [
-              { id: '1', name: 'أدوات منزلية' },
-              { id: '2', name: 'إلكترونيات' }
-          ];
-          updateCategorySelectors();
+          console.log("Fetching error:", e);
+          if(e.message.includes("index")) {
+               const qFallback = query(productsCol, limit(PRODUCTS_PER_PAGE));
+               const snap = await getDocs(qFallback);
+               const prods = [];
+               snap.forEach(d => prods.push({id: d.id, ...d.data()}));
+               appendProductsToScreen(prods);
+          }
+      } finally {
+          isFetching = false;
+          document.getElementById('loadingMsg').style.display = 'none';
+          updateCount();
       }
   }
 
-  function updateCategorySelectors() {
-      const editSelect = document.getElementById('editCategorySelect');
-      editSelect.innerHTML = '';
+  function appendProductsToScreen(products) {
+      const listDiv = document.getElementById('productsList');
+      products.forEach(p => {
+          const thumb = (p.image && p.image.length > 0) ? p.image[0] : '';
+          const pData = encodeURIComponent(JSON.stringify(p));
 
-      categories.forEach(cat => {
-          const option = new Option(cat.name, cat.name);
-          editSelect.appendChild(option.cloneNode(true));
+          const row = document.createElement('div');
+          row.className = 'product-row';
+          row.innerHTML = `
+              <div class="p-info">
+                  <img src="${thumb}" class="p-img">
+                  <div class="p-details">
+                      <div>${p.name}</div>
+                      <div>${p.price}</div>
+                  </div>
+              </div>
+              <div class="product-actions">
+                  <button class="btn-action btn-edit" onclick="openEdit('${pData}')">تعديل</button>
+                  <button class="btn-action btn-delete" onclick="deleteProd('${p.id}')">حذف</button>
+              </div>
+          `;
+          listDiv.appendChild(row);
       });
   }
 
-  // ------------------------------------------------------------------
-  // 2. إدارة صور التعديل
-  // ------------------------------------------------------------------
+  function updateCount() {
+      const count = document.getElementById('productsList').children.length;
+      document.getElementById('count').textContent = count;
+  }
+
+  // ==========================================
+  // 2. البحث (السيرفر)
+  // ==========================================
+  window.handleSearch = function(text) {
+      clearTimeout(searchTimeout);
+      const term = text.trim();
+      if(term === "") { loadFirstBatch(); return; }
+
+      searchTimeout = setTimeout(async () => {
+          const listDiv = document.getElementById('productsList');
+          listDiv.innerHTML = '<div style="text-align:center; color:#999;">جاري البحث...</div>';
+          document.getElementById('loadMoreBtn').classList.add('hidden');
+
+          try {
+              const q = query(productsCol, orderBy('name'), startAt(term), endAt(term + '\uf8ff'), limit(20));
+              const snapshot = await getDocs(q);
+              listDiv.innerHTML = "";
+              if (snapshot.empty) {
+                  listDiv.innerHTML = '<div style="text-align:center;">لا توجد نتائج.</div>';
+              } else {
+                  const results = [];
+                  snapshot.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
+                  appendProductsToScreen(results);
+              }
+              updateCount();
+          } catch (e) { console.error(e); }
+      }, 500);
+  }
+
+  // ==========================================
+  // 3. التعديل وإدارة الصور
+  // ==========================================
+  
+  let currentImages = [];
+  let newImagesToAdd = [];
+
+  window.openEdit = function(encodedData) {
+      const p = JSON.parse(decodeURIComponent(encodedData));
+      
+      document.getElementById('editProductId').value = p.id;
+      document.getElementById('editName').value = p.name;
+      document.getElementById('editPrice').value = p.price;
+      document.getElementById('editDesc').value = p.description || '';
+      
+      loadCategories(p.category);
+      
+      currentImages = p.image || [];
+      renderCurrentImages();
+
+      newImagesToAdd = [];
+      document.getElementById('editImagesInput').value = '';
+      document.getElementById('newImagesPreview').innerHTML = '';
+      
+      document.getElementById('editModal').style.display = 'flex';
+  }
+
+  window.closeModal = function() {
+      document.getElementById('editModal').style.display = 'none';
+  }
 
   document.getElementById("editImagesInput").addEventListener("change", function () {
-    selectedFilesForEdit = [...this.files]; 
-    const previewBox = document.getElementById("editPreviewBoxNew");
-    previewBox.innerHTML = "";
-
-    if(selectedFilesForEdit.length > 0) document.querySelector('#editModalContent .upload-text').textContent = `تم اختيار ${selectedFilesForEdit.length} صور جديدة`;
-
-    selectedFilesForEdit.forEach(file => {
+    const files = [...this.files];
+    const previewBox = document.getElementById("newImagesPreview");
+    
+    files.forEach(file => {
       const reader = new FileReader();
       reader.onload = e => {
+        const base64String = e.target.result;
+        newImagesToAdd.push(base64String);
+
         const img = document.createElement("img");
-        img.src = e.target.result;
+        img.src = base64String;
+        img.style.cssText = "width:70px; height:70px; border-radius:8px; border:1px solid #ddd; flex-shrink:0;";
         previewBox.appendChild(img);
       };
       reader.readAsDataURL(file);
     });
   });
 
-  // 🔥 دالة الحذف المؤقت للصورة من الواجهة
-  window.deleteImageFromEdit = function(productId, indexToRemove) {
-      if (!confirm("هل أنت متأكد من حذف هذه الصورة؟ (سيتم الحفظ عند الضغط على 'حفظ التعديلات')")) return;
-      
-      currentImageURLs.splice(indexToRemove, 1); 
-      
-      const editCurrentImagesBox = document.getElementById('editCurrentImages');
-      editCurrentImagesBox.innerHTML = '';
-
-      currentImageURLs.forEach((imgSrc, index) => {
-          const imgWrapper = document.createElement("div");
-          imgWrapper.style.position = 'relative';
-          imgWrapper.style.display = 'inline-block';
-          imgWrapper.style.marginLeft = '8px';
-
-          const img = document.createElement("img");
-          img.src = imgSrc;
-          imgWrapper.appendChild(img);
-          
-          const deleteBtn = document.createElement("button");
-          deleteBtn.textContent = 'x';
-          deleteBtn.style.cssText = 'position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 15px; height: 15px; font-size: 10px; padding: 0; line-height: 1; border: none; cursor: pointer;';
-          
-          deleteBtn.onclick = () => { deleteImageFromEdit(productId, index); };
-          imgWrapper.appendChild(deleteBtn);
-          
-          editCurrentImagesBox.appendChild(imgWrapper);
+  function renderCurrentImages() {
+      const box = document.getElementById('currentImagesPreview');
+      box.innerHTML = '';
+      currentImages.forEach((url, idx) => {
+          const div = document.createElement('div');
+          div.className = 'thumb-wrapper';
+          div.innerHTML = `<img src="${url}"><button class="thumb-remove" onclick="removeCurrentImage(${idx})">×</button>`;
+          box.appendChild(div);
       });
-      
-      alert("تم حذف الصورة مؤقتاً. اضغط 'حفظ التعديلات' لتطبيق التغيير.");
   }
 
-
-  // 🔥 دالة فتح نافذة التعديل
-  window.openEditModal = function(buttonElement) {
-      const productJson = buttonElement.getAttribute('data-product');
-      if (!productJson) return;
-      
-      const p = JSON.parse(productJson.replace(/&quot;/g, '"'));
-
-      // 1. تهيئة الحالة والواجهة
-      selectedFilesForEdit = [];
-      document.getElementById("editPreviewBoxNew").innerHTML = '';
-      document.querySelector('#editModalContent .upload-text').textContent = `اضغط لاختيار صور لإضافتها`;
-      
-      currentImageURLs = p.image || []; 
-      
-      // 2. ملء حقول البيانات
-      document.getElementById('editProductId').value = p.id;
-      document.getElementById('editName').value = p.name;
-      document.getElementById('editPrice').value = p.price;
-      document.getElementById('editDesc').value = p.description;
-
-      const select = document.getElementById('editCategorySelect');
-      setTimeout(() => { select.value = p.category; }, 500); 
-      
-      // 3. عرض الصور الحالية مع خيار الحذف (يستخدم دالة deleteImageFromEdit)
-      const editCurrentImagesBox = document.getElementById('editCurrentImages');
-      editCurrentImagesBox.innerHTML = '';
-      
-      currentImageURLs.forEach((imgSrc, index) => {
-          const imgWrapper = document.createElement("div");
-          imgWrapper.style.position = 'relative';
-          imgWrapper.style.display = 'inline-block';
-          imgWrapper.style.marginLeft = '8px';
-
-          const img = document.createElement("img");
-          img.src = imgSrc;
-          imgWrapper.appendChild(img);
-          
-          const deleteBtn = document.createElement("button");
-          deleteBtn.textContent = 'x';
-          deleteBtn.style.cssText = 'position: absolute; top: -5px; right: -5px; background: red; color: white; border-radius: 50%; width: 15px; height: 15px; font-size: 10px; padding: 0; line-height: 1; border: none; cursor: pointer;';
-          
-          deleteBtn.onclick = () => { deleteImageFromEdit(p.id, index); };
-          imgWrapper.appendChild(deleteBtn);
-          
-          editCurrentImagesBox.appendChild(imgWrapper);
-      });
-
-      document.getElementById('editModal').style.display = 'flex';
+  window.removeCurrentImage = function(idx) {
+      if(!confirm("حذف الصورة؟")) return;
+      currentImages.splice(idx, 1);
+      renderCurrentImages();
   }
 
-
-  // 🔥 دالة حفظ التعديلات النهائية
   window.submitEditProduct = async function() {
+      const btn = document.getElementById('saveBtn');
       const id = document.getElementById('editProductId').value;
-      const name = document.getElementById('editName').value.trim();
-      const price = document.getElementById('editPrice').value.trim();
-      const description = document.getElementById('editDesc').value.trim();
-      const category = document.getElementById('editCategorySelect').value;
-      
-      if (!name || !price) {
-          alert("يرجى تعبئة اسم المنتج والسعر.");
-          return;
-      }
+      if(!id) return;
 
-      const btn = document.querySelector('#editModalContent .btn-primary');
-      btn.textContent = "جاري معالجة الصور والتعديلات...";
       btn.disabled = true;
-      
+      btn.textContent = "جاري الحفظ...";
+
       try {
-          // 1. رفع الصور الجديدة إذا وجدت بالترتيب
-          const newImageURLs = [];
-          
-          if (selectedFilesForEdit.length > 0) {
-              btn.textContent = `جاري رفع ${selectedFilesForEdit.length} صور جديدة...`;
-              
-              for (let i = 0; i < selectedFilesForEdit.length; i++) {
-                  const file = selectedFilesForEdit[i];
-                  const fileExtension = file.name.split('.').pop();
-                  const storagePath = `products_images/${id}_edit_${Date.now()}_${i}.${fileExtension}`;
-                  const storageRef = ref(storage, storagePath);
+          const finalImages = [...currentImages, ...newImagesToAdd];
 
-                  await uploadBytes(storageRef, file);
-                  const url = await getDownloadURL(storageRef);
-                  newImageURLs.push(url);
-                  
-                  btn.textContent = `جاري رفع الصورة الجديدة ${i + 1} من ${selectedFilesForEdit.length}...`;
-              }
-          }
-          
-          // 2. دمج القوائم المرتبة: الصور القديمة (المتبقية بعد الحذف) + الصور الجديدة
-          const finalImageURLs = currentImageURLs.concat(newImageURLs);
-          
-          if (finalImageURLs.length === 0) {
-              alert("يجب أن يحتوي المنتج على صورة واحدة على الأقل!");
-              btn.textContent = "حفظ التعديلات";
-              btn.disabled = false;
-              return;
-          }
-
-          // 3. تحديث المنتج في Firestore
-          btn.textContent = "جاري حفظ بيانات المنتج...";
-          const productRef = doc(db, "products", id);
-          await updateDoc(productRef, {
-              name: name,
-              price: price,
-              description: description,
-              category: category,
-              image: finalImageURLs, 
+          await updateDoc(doc(db, "products", id), {
+              name: document.getElementById('editName').value,
+              price: document.getElementById('editPrice').value,
+              category: document.getElementById('editCategorySelect').value,
+              description: document.getElementById('editDesc').value,
+              image: finalImages,
               updatedAt: new Date()
           });
-          
-          alert("✅ تم تعديل المنتج بنجاح!");
-          document.getElementById('editModal').style.display = 'none';
-          renderProducts();
+
+          alert("✅ تم التعديل بنجاح!");
+          closeModal();
+          if(!document.getElementById('searchInput').value) loadFirstBatch();
+
       } catch (e) {
-          console.error("Error updating document: ", e);
-          alert("حدث خطأ أثناء التعديل: " + e.message);
+          alert("خطأ: " + e.message);
       } finally {
-          btn.textContent = "حفظ التعديلات";
           btn.disabled = false;
+          btn.textContent = "حفظ التعديلات";
       }
   }
 
-  // ------------------------------------------------------------------
-  // 3. منطق عرض وحذف المنتجات
-  // ------------------------------------------------------------------
-
-  window.deleteProduct = async function(id) {
-    if(!confirm("هل أنت متأكد من حذف هذا المنتج نهائياً من المتجر؟")) return;
-    try {
-        await deleteDoc(doc(db, "products", id));
-        renderProducts();
-    } catch(e) {
-        alert("خطأ: " + e.message);
-    }
+  // ==========================================
+  // 4. الحذف والتصنيفات
+  // ==========================================
+  window.deleteProd = async function(id) {
+      if(!confirm("هل أنت متأكد من الحذف النهائي؟")) return;
+      try {
+          await deleteDoc(doc(db, "products", id));
+          loadFirstBatch(); 
+      } catch(e) {
+          alert("خطأ: " + e.message);
+      }
   }
 
-  async function renderProducts() {
-    const box = document.getElementById("productsList");
-    try {
-        const snapshot = await getDocs(productsCol);
-        box.innerHTML = "";
-        document.getElementById("count").textContent = snapshot.docs.length;
-
-        if (snapshot.docs.length === 0) {
-            box.innerHTML = "<div style='text-align:center;color:#777;'>لا توجد منتجات في السيرفر حالياً</div>";
-            return;
-        }
-
-        snapshot.docs.forEach(docSnap => {
-          const p = docSnap.data();
-          const pId = docSnap.id;
-          const thumb = Array.isArray(p.image) && p.image.length > 0 ? p.image[0] : '';
-          
-          const productData = {
-              id: pId,
-              name: p.name,
-              price: p.price,
-              description: p.description || '',
-              category: p.category,
-              image: p.image || []
-          };
-          const productJson = JSON.stringify(productData).replace(/"/g, '&quot;'); 
-          
-          const row = document.createElement("div");
-          row.className = "product-row";
-          
-          row.innerHTML = `
-            <div class="p-info">
-              <img src="${thumb}" class="p-img">
-              <div>
-                <div class="p-name">${p.name}</div>
-                <div class="p-price">${p.price}</div>
-                <div style="font-size:11px; color:#999;">التصنيف: ${p.category || 'غير مصنف'}</div>
-              </div>
-            </div>
-            <div class="product-actions">
-                <button class="btn-edit" onclick="openEditModal(this)" data-product='${productJson}'>تعديل</button>
-                <button class="btn-delete" onclick="deleteProduct('${pId}')">حذف</button>
-            </div>
-          `;
-          box.appendChild(row);
-        });
-    } catch (e) {
-        box.innerHTML = `<div style='color:red;text-align:center'>فشل الاتصال: تأكد من إعدادات Firebase</div>`;
-        console.error(e);
-    }
+  async function loadCategories(selectedCat) {
+      try {
+          const snap = await getDocs(categoriesCol);
+          const select = document.getElementById('editCategorySelect');
+          select.innerHTML = '';
+          snap.forEach(doc => {
+              const opt = document.createElement('option');
+              opt.value = doc.data().name;
+              opt.textContent = doc.data().name;
+              select.appendChild(opt);
+          });
+          if(selectedCat) select.value = selectedCat;
+      } catch(e) { console.log(e); }
   }
 
-  // 4. بدء التشغيل
-  fetchCategories(); 
-  renderProducts();
+  loadFirstBatch();
+
+  window.loadNextBatch = loadNextBatch;
+  window.handleSearch = handleSearch;
+  window.openEdit = openEdit;
+  window.closeModal = closeModal;
+  window.removeCurrentImage = removeCurrentImage;
+  window.submitEditProduct = submitEditProduct;
+  window.deleteProd = deleteProd;
+
 </script>
 </body>
 </html>
