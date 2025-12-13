@@ -202,6 +202,7 @@
   const categoriesCol = collection(db, "categories");
 
   let lastVisibleDoc = null;
+  // 🔥🔥🔥 تحديد عدد المنتجات بـ 10 🔥🔥🔥
   const PRODUCTS_PER_PAGE = 10;
   let isFetching = false;
   let searchTimeout = null;
@@ -329,7 +330,7 @@
   }
 
   // ==========================================
-  // 3. التعديل وإدارة الصور (طريقة Base64)
+  // 3. التعديل وإدارة الصور
   // ==========================================
   
   let currentImages = [];
@@ -359,7 +360,6 @@
       document.getElementById('editModal').style.display = 'none';
   }
 
-  // تحويل الصور المختارة إلى أكواد فوراً
   document.getElementById("editImagesInput").addEventListener("change", function () {
     const files = [...this.files];
     const previewBox = document.getElementById("newImagesPreview");
@@ -396,7 +396,6 @@
       renderCurrentImages();
   }
 
-  // حفظ التعديلات
   window.submitEditProduct = async function() {
       const btn = document.getElementById('saveBtn');
       const id = document.getElementById('editProductId').value;
@@ -406,7 +405,6 @@
       btn.textContent = "جاري الحفظ...";
 
       try {
-          // دمج الصور
           const finalImages = [...currentImages, ...newImagesToAdd];
 
           await updateDoc(doc(db, "products", id), {
@@ -420,11 +418,10 @@
 
           alert("✅ تم التعديل بنجاح!");
           closeModal();
-          
           if(!document.getElementById('searchInput').value) loadFirstBatch();
 
       } catch (e) {
-          alert("خطأ (قد يكون حجم الصور كبيراً جداً): " + e.message);
+          alert("خطأ: " + e.message);
       } finally {
           btn.disabled = false;
           btn.textContent = "حفظ التعديلات";
