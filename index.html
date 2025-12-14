@@ -351,23 +351,9 @@
         .final-price{ color:var(--main-color); font-size:20px; } /* الإجمالي كحلي */
         
         /* أزرار الإجراءات السفلية */
-        .checkout-btn{ 
-            width:100%; 
-            padding:15px; 
-            border-radius:99px; 
-            font-weight:800; 
-            font-size:16px; 
-            border:0; 
-            cursor:pointer;
-            background: linear-gradient(90deg,#25D366,#128C7E); 
-            color:#fff;
-            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .checkout-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
-        }
+        .checkout-btn{ width:100%; padding:12px; border-radius:99px; font-weight:800; font-size:16px; border:0; cursor:pointer; }
+        #checkoutBtnWhatsapp{ background: linear-gradient(90deg,#25D366,#128C7E); color:#fff; } /* أخضر واتساب */
+        #checkoutBtnPage{ background: var(--main-color); color:#fff; } /* كحلي */
         
         /* الشريط السفلي */
         .bottom-nav{
@@ -377,26 +363,14 @@
             transition: height 0.3s ease, padding 0.3s ease;
         }
         .nav-home-mode { height: 55px; }
-        .nav-cart-mode { 
-            height: 130px; 
-            align-items: flex-start; 
-            padding-top: 10px;
-            flex-direction: column;
-        }
+        .nav-cart-mode { height: 120px; align-items: flex-start; padding-top: 10px; }
         .nav-item{ 
             display:flex; flex-direction:column; align-items:center; gap:3px; color:#ccc; 
             font-size:10px; font-weight:500; width:50%; padding:6px 0; cursor:pointer;
         }
         .nav-item.active{ color:var(--secondary-color); font-weight:700; }
         .nav-badge{ position:absolute; top:6px; margin-right:-12px; background:var(--main-color); color:#fff; font-size:9px; padding:2px 6px; border-radius:10px; border:1px solid #fff; }
-        .cart-actions-bar { 
-            display: flex; 
-            gap: 10px; 
-            padding: 15px; 
-            width: 100%; 
-            background: #fff;
-            border-top: 1px solid #eee;
-        }
+        .cart-actions-bar { display: flex; gap: 8px; padding: 10px 14px; width: 100%; }
 
         /* Quick View */
         #quickView{ 
@@ -574,7 +548,8 @@
             </div>
         </div>
         <div id="cartActionBarContent" class="cart-actions-bar" style="display:none;">
-            <button class="checkout-btn" onclick="sendCart()">📱 إرسال الطلب عبر واتساب</button>
+            <button id="checkoutBtnWhatsapp" class="checkout-btn" onclick="sendCart()" style="flex:1;">إرسال الطلب واتساب</button>
+            <button id="checkoutBtnPage" class="checkout-btn" onclick="prepareAndRedirectToCheckout()" style="flex:1;">إتمام الطلب إلكترونياً</button>
         </div>
     </div>
 
@@ -828,7 +803,7 @@
                 // إخفاء الهيدر وتعيين padding-bottom صغير مناسب للسلة
                 if (headerEl) headerEl.style.display = 'none';
                 document.body.style.paddingTop = '0px';
-                document.body.style.paddingBottom = '150px'; 
+                document.body.style.paddingBottom = '140px'; 
             }
             window.scrollTo({top:0, behavior:'smooth'});
         }
@@ -1103,37 +1078,19 @@
             finalTotalDisplay.innerText = finalTotalDisplayValue.toLocaleString() + displayCurrencySymbol;
         }
 
-        /* ====================== Send cart via WhatsApp (مع السعر لكل منتج) ====================== */
+        /* ====================== Send cart via WhatsApp ====================== */
         window.sendCart = function(){
             cart = JSON.parse(localStorage.getItem("cart")||"[]") || cart;
             if(cart.length === 0) return;
             
-            let msg = "📦 *طلب جديد من متجر ابن المختار*\n\n";
-            msg += "المنتجات المطلوبة:\n";
-            msg += "────────────────\n";
-            
+            let msg = "مرحباً، أريد طلب المنتجات التالية:\n\n";
             let productSubTotal = 0; // الإجمالي قبل الخصم
             
             cart.forEach((i, idx) => {
                 let rawPrice = (i.price || "").toString().replace(/[^0-9.]/g, '');
                 let priceVal = parseFloat(rawPrice) || 0;
-                let itemTotal = priceVal * (i.qty || 0);
-                productSubTotal += itemTotal;
-                
-                // عرض السعر لكل منتج مع السعر الإجمالي للمنتج
-                let displayPrice = priceVal.toLocaleString() + " ر.ي";
-                let displayItemTotal = itemTotal.toLocaleString() + " ر.ي";
-                
-                if (currentCurrency === 'SAR') {
-                    displayPrice = Math.ceil(priceVal / SAR_RATE).toLocaleString() + " ر.س";
-                    displayItemTotal = Math.ceil(itemTotal / SAR_RATE).toLocaleString() + " ر.س";
-                }
-                
-                msg += `${idx+1}. ${i.name}\n`;
-                msg += `   الكمية: ${i.qty}\n`;
-                msg += `   السعر للواحدة: ${displayPrice}\n`;
-                msg += `   الإجمالي: ${displayItemTotal}\n`;
-                msg += `   ────────\n`;
+                productSubTotal += priceVal * (i.qty || 0);
+                msg += `${idx+1}. ${i.name} (عدد ${i.qty})\n`;
             });
             
             // 🔥🔥 حساب الخصم - كود أصلي 🔥🔥
@@ -1146,6 +1103,7 @@
             let finalProductTotalYER = productSubTotal - discountAmount;
             let shippingCostYER = parseInt(shippingSelect.value || "1000");
             let finalTotalYER = finalProductTotalYER + shippingCostYER;
+            
             
             // 🔥🔥 تطبيق سعر الصرف على القيم النهائية - كود أصلي 🔥🔥
             let displayCurrencySymbol = ' ر.ي';
@@ -1164,27 +1122,48 @@
             
             const shippingLocation = shippingSelect.options[shippingSelect.selectedIndex].text;
             
-            msg += `\n📊 *الفاتورة النهائية:*\n`;
-            msg += `────────────────\n`;
-            msg += `📦 إجمالي المنتجات: ${displayProductSubTotal.toLocaleString()}${displayCurrencySymbol}\n`;
+            msg += `\n──────────────\n📦 إجمالي المنتجات: ${displayProductSubTotal.toLocaleString()}${displayCurrencySymbol}`;
             
             if (discountAmount > 0) {
-                msg += `💰 الخصم (${discountPercentage}%): -${displayDiscountAmount.toLocaleString()}${displayCurrencySymbol}\n`;
+                msg += `\n💰 الخصم (${discountPercentage}%): -${displayDiscountAmount.toLocaleString()}${displayCurrencySymbol}`;
             }
             
-            msg += `📍 التوصيل (${shippingLocation.split('(')[0]}): +${displayShippingCost.toLocaleString()}${displayCurrencySymbol}\n`;
-            msg += `────────────────\n`;
-            msg += `🌟 *الإجمالي النهائي: ${displayFinalTotal.toLocaleString()}${displayCurrencySymbol}*\n\n`;
-            
-            msg += `📍 *معلومات التوصيل:*\n`;
-            msg += `────────────────\n`;
-            msg += `الموقع: ${shippingLocation.split('(')[0]}\n`;
-            msg += `التاريخ: ${new Date().toLocaleDateString('ar-YE')}\n`;
-            msg += `────────────────\n\n`;
-            msg += `شكراً لطلبكم من متجر ابن المختار للأدوات المنزلية 🏠✨\n`;
-            msg += `سيتم التواصل معكم قريباً لتأكيد الطلب وتفاصيل الدفع والتوصيل.`;
+            msg += `\n📍 التوصيل: +${displayShippingCost.toLocaleString()}${displayCurrencySymbol}`;
+            msg += `\n🌟 الإجمالي النهائي: ${displayFinalTotal.toLocaleString()}${displayCurrencySymbol}`;
 
             window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`);
+        }
+        
+        window.prepareAndRedirectToCheckout = function(){
+            cart = JSON.parse(localStorage.getItem("cart")||"[]") || cart;
+            if(cart.length === 0) return;
+
+            let productTotal = 0;
+            cart.forEach(item => {
+                let rawPrice = (item.price || "").toString().replace(/[^0-9.]/g, '');
+                productTotal += (parseFloat(rawPrice) || 0) * (item.qty || 0);
+            });
+            
+            // 🔥🔥 حفظ الخصم والمبلغ النهائي (بالعملة الأصلية YER) - كود أصلي 🔥🔥
+            const settings = window.globalSettings || { discountPercentage: 0, minAmountForDiscount: 0 };
+            const { discountPercentage, minAmountForDiscount } = settings;
+            let discountAmount = 0;
+            if (productTotal >= minAmountForDiscount && discountPercentage > 0) {
+                discountAmount = (productTotal * discountPercentage) / 100;
+            }
+            
+            let finalProductTotal = productTotal - discountAmount;
+            let shippingCost = parseInt(shippingSelect.value || "1000");
+            let finalTotal = finalProductTotal + shippingCost;
+            
+            
+            localStorage.setItem("checkoutSummary", JSON.stringify({ 
+                subTotal: productTotal, 
+                discountAmount: discountAmount, // حفظ قيمة الخصم
+                finalTotal, 
+                shipping:{ cost: shippingCost, location: shippingSelect.options[shippingSelect.selectedIndex].text } 
+            }));
+            window.location.href = 'checkout.html';
         }
 
         /* ====================== Quick View (مُصلَّح) ====================== */
