@@ -2,7 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- تعديل viewport لجعل الواجهة مخصصة للهاتف -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#2563eb">
     <title>نظام إدارة الإنتاج | النسخة المتكاملة 2026</title>
 
@@ -48,6 +49,68 @@
             height: 100vh;
             overflow: hidden;
             user-select: none;
+            touch-action: manipulation;
+            /* منع التكبير على الهواتف */
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        /* إصلاحات للهاتف فقط */
+        @media only screen and (max-width: 768px) {
+            body {
+                height: -webkit-fill-available;
+            }
+            
+            #app-view {
+                height: 100vh;
+                height: -webkit-fill-available;
+            }
+            
+            .modal-dialog {
+                width: 95% !important;
+                margin: 10px;
+                padding: 20px !important;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+            
+            .list-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .list-item-actions {
+                align-self: flex-end;
+            }
+            
+            .modal-footer {
+                flex-direction: column;
+            }
+            
+            .modal-footer .btn {
+                width: 100%;
+            }
+        }
+
+        /* منع ظهور القوائم المختصرة على الهاتف */
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        input, textarea {
+            -webkit-user-select: text;
+            -khtml-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
         }
 
         /* شاشة تسجيل الدخول */
@@ -61,6 +124,7 @@
             padding: 30px 20px;
             justify-content: center;
             animation: fadeIn 0.5s ease;
+            overflow-y: auto;
         }
 
         .auth-brand {
@@ -111,6 +175,9 @@
             color: var(--text-primary);
             transition: var(--transition);
             outline: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
         }
 
         .input-field:focus {
@@ -163,6 +230,7 @@
             position: sticky;
             top: 0;
             z-index: 100;
+            flex-shrink: 0;
         }
 
         .app-body {
@@ -170,6 +238,7 @@
             overflow-y: auto;
             padding: 20px;
             padding-bottom: 100px;
+            -webkit-overflow-scrolling: touch;
         }
 
         /* شريط التنقل السفلي */
@@ -186,6 +255,7 @@
             border-top: 1px solid var(--border);
             padding: 10px 0;
             z-index: 1000;
+            flex-shrink: 0;
         }
 
         .nav-item {
@@ -365,6 +435,8 @@
             justify-content: center;
             padding: 20px;
             animation: fadeIn 0.3s ease;
+            -webkit-overflow-scrolling: touch;
+            overflow-y: auto;
         }
 
         .modal-dialog {
@@ -472,7 +544,34 @@
             border-right: 4px solid var(--primary);
             margin-bottom: 10px;
         }
-    </style>
+
+        /* تحسينات للهاتف */
+        .input-field:disabled {
+            background-color: #f8fafc;
+            color: var(--text-secondary);
+        }
+
+        /* تحسينات الوردية للمشرف */
+        .shift-info {
+            background: rgba(37, 99, 235, 0.1);
+            padding: 15px;
+            border-radius: var(--radius-md);
+            border: 2px solid var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .shift-info h4 {
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .shift-info p {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 18px;
+        }
+        </style>
 </head>
 <body>
     <!-- شاشة تسجيل الدخول -->
@@ -533,20 +632,23 @@
         <div class="app-body">
             <!-- صفحة المشرف -->
             <section id="supervisor-page" class="hidden">
+                <!-- عرض الوردية المحددة للمشرف -->
+                <div class="shift-info">
+                    <h4><i class="fas fa-calendar-alt"></i> الوردية المخصصة لك</h4>
+                    <p id="current-shift-name">جاري تحميل الوردية...</p>
+                    <small style="color: var(--text-secondary);">الوردية المخصصة لك بشكل دائم من قبل المدير</small>
+                </div>
+
                 <div class="card">
                     <div class="card-header">
                         <div class="card-title">تقرير الإنتاج اليومي</div>
                     </div>
 
                     <form id="report-form">
+                        <!-- الوردية (غير قابلة للتعديل من قبل المشرف) -->
                         <div class="input-group">
                             <label class="input-label">الوردية</label>
-                            <select id="shift-type" class="input-field">
-                                <option value="" disabled selected>اختر الوردية</option>
-                                <option value="الوردية الأولى (صباحاً)">الوردية الأولى (صباحاً)</option>
-                                <option value="الوردية الثانية (مساءً)">الوردية الثانية (مساءً)</option>
-                                <option value="الوردية الثالثة (ليلاً)">الوردية الثالثة (ليلاً)</option>
-                            </select>
+                            <input type="text" id="shift-type" class="input-field" disabled placeholder="سيتم تعيين الوردية من قبل المدير">
                         </div>
 
                         <div class="input-group">
@@ -754,7 +856,7 @@
     <div class="modal-overlay" id="staff-modal">
         <div class="modal-dialog">
             <div class="modal-header">
-                <div class="modal-title">إدارة المشرفين</div>
+                <div class="modal-title">إضافة مشرف جديد</div>
                 <button class="modal-close" onclick="closeModal('staff-modal')">
                     <i class="fas fa-times"></i>
                 </button>
@@ -781,23 +883,21 @@
             </div>
 
             <div class="input-group">
+                <label class="input-label">الوردية</label>
+                <select id="s-shift" class="input-field">
+                    <option value="">اختر الوردية</option>
+                    <option value="الوردية الأولى (صباحاً)">الوردية الأولى (صباحاً)</option>
+                    <option value="الوردية الثانية (مساءً)">الوردية الثانية (مساءً)</option>
+                    <option value="الوردية الثالثة (ليلاً)">الوردية الثالثة (ليلاً)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
                 <label class="input-label">حالة الحساب</label>
                 <select id="s-active" class="input-field">
                     <option value="true">نشط</option>
                     <option value="false">معطل</option>
                 </select>
-            </div>
-
-            <div id="whatsapp-success" class="hidden" style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: var(--radius-md); border: 2px dashed var(--success); margin-bottom: 20px;">
-                <div style="text-align: center;">
-                    <p style="font-size: 14px; font-weight: 700; color: var(--success); margin-bottom: 10px;">
-                        تم حفظ المشرف بنجاح!
-                    </p>
-                    <button class="btn btn-primary" id="whatsapp-btn" style="width: 100%;">
-                        <i class="fab fa-whatsapp"></i>
-                        إرسال البيانات عبر واتساب
-                    </button>
-                </div>
             </div>
 
             <div class="modal-footer">
@@ -838,6 +938,16 @@
             <div class="input-group">
                 <label class="input-label">كلمة المرور الجديدة</label>
                 <input type="password" id="edit-s-pass" class="input-field" placeholder="اتركه فارغاً للحفاظ على كلمة المرور الحالية">
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">الوردية</label>
+                <select id="edit-s-shift" class="input-field">
+                    <option value="">اختر الوردية</option>
+                    <option value="الوردية الأولى (صباحاً)">الوردية الأولى (صباحاً)</option>
+                    <option value="الوردية الثانية (مساءً)">الوردية الثانية (مساءً)</option>
+                    <option value="الوردية الثالثة (ليلاً)">الوردية الثالثة (ليلاً)</option>
+                </select>
             </div>
 
             <div class="input-group">
@@ -1039,7 +1149,7 @@
             }, 5000);
         }
         
-        function redirectToDashboard() {
+        async function redirectToDashboard() {
             document.getElementById('auth-view').classList.add('hidden');
             document.getElementById('app-view').classList.remove('hidden');
             
@@ -1050,6 +1160,7 @@
                 loadDashboardStats();
             } else {
                 document.getElementById('supervisor-page').classList.remove('hidden');
+                await loadSupervisorShift();
                 loadSupervisorNotifications();
             }
         }
@@ -1062,17 +1173,33 @@
         }
 
         // ============ دوال المشرف ============
-        async function submitReport() {
-            const shift = document.getElementById('shift-type').value;
+        async function loadSupervisorShift() {
+            try {
+                if (State.currentUser && State.currentUser.shift_type) {
+                    document.getElementById('shift-type').value = State.currentUser.shift_type;
+                    document.getElementById('current-shift-name').textContent = State.currentUser.shift_type;
+                    document.getElementById('submit-btn').disabled = false;
+                } else {
+                    showToast('لم يتم تعيين وردية لك. الرجاء الاتصال بالمدير.', 'warning');
+                    document.getElementById('submit-btn').disabled = true;
+                }
+            } catch (error) {
+                console.error('Error loading supervisor shift:', error);
+            }
+        }
+        
+        async function submitReport(e) {
+            e.preventDefault();
+            
+            if (!State.currentUser.shift_type) {
+                showToast('لا توجد وردية محددة لك', 'error');
+                return;
+            }
+            
             const qty = document.getElementById('prod-qty').value;
             const weight = document.getElementById('prod-weight').value;
             const notes = document.getElementById('prod-notes').value;
             const btn = document.getElementById('submit-btn');
-            
-            if (!shift) {
-                showToast('الرجاء اختيار الوردية', 'error');
-                return;
-            }
             
             if (!qty || qty <= 0) {
                 showToast('الرجاء إدخال كمية صحيحة', 'error');
@@ -1090,7 +1217,9 @@
             try {
                 const report = {
                     supervisor_id: State.currentUser.id,
-                    shift_name: shift,
+                    supervisor_name: State.currentUser.full_name,
+                    supervisor_shift: State.currentUser.shift_type,
+                    shift_name: State.currentUser.shift_type,
                     qty: parseFloat(qty),
                     weight: parseFloat(weight),
                     notes: notes,
@@ -1116,6 +1245,10 @@
         
         function clearForm() {
             document.getElementById('report-form').reset();
+            // الحفاظ على قيمة الوردية
+            if (State.currentUser && State.currentUser.shift_type) {
+                document.getElementById('shift-type').value = State.currentUser.shift_type;
+            }
         }
         
         async function loadSupervisorNotifications() {
@@ -1144,12 +1277,12 @@
                 container.innerHTML = data.map(notification => `
                     <div class="list-item notification-item">
                         <div class="list-item-content">
-                            <div class="list-item-title">${notification.title || 'إشعار جديد'}</div>
+                            <div class="list-item-title">${notification.title}</div>
                             <div class="list-item-subtitle">
                                 <span>${notification.message}</span>
                             </div>
                             <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">
-                                ${new Date(notification.created_at).toLocaleString('ar-YE')}
+                                <i class="fas fa-clock"></i> ${new Date(notification.created_at).toLocaleString('ar-YE')}
                             </div>
                         </div>
                     </div>
@@ -1259,9 +1392,9 @@
                         <div class="list-item-content">
                             <div class="list-item-title">${report.employees?.full_name || 'مشرف'}</div>
                             <div class="list-item-subtitle">
-                                <span>${report.shift_name}</span>
+                                <span class="badge-primary">${report.shift_name}</span>
                                 <span>•</span>
-                                <span>${new Date(report.created_at).toLocaleTimeString('ar-YE', { hour: '2-digit', minute: '2-digit' })}</span>
+                                <span><i class="fas fa-clock"></i> ${new Date(report.created_at).toLocaleTimeString('ar-YE', { hour: '2-digit', minute: '2-digit' })}</span>
                             </div>
                             <div style="display: flex; gap: 15px; margin-top: 8px;">
                                 <span style="color: var(--primary); font-weight: 700;">
@@ -1282,57 +1415,58 @@
         }
         
         async function loadStaff() {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('employees')
-                    .select('*')
-                    .eq('role', 'supervisor')
-                    .order('created_at', { ascending: false });
-                
-                if (error) throw error;
-                
-                const container = document.getElementById('staff-list-container');
-                
-                if (!data || data.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-users"></i>
-                            <h3>لا توجد مشرفين</h3>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                container.innerHTML = data.map(staff => `
-                    <div class="list-item">
-                        <div class="list-item-content">
-                            <div class="list-item-title">${staff.full_name}</div>
-                            <div class="list-item-subtitle">
-                                <span><i class="fas fa-phone"></i> ${staff.phone_number}</span>
-                                <span>•</span>
-                                <span><i class="fas fa-key"></i> ${staff.password}</span>
-                                <span>•</span>
-                                <span class="badge ${staff.is_active ? 'badge-success' : 'badge-warning'}">
-                                    ${staff.is_active ? 'نشط' : 'معطل'}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="list-item-actions">
-                            <button class="action-btn" onclick="openEditStaff(${staff.id})">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="action-btn" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);" onclick="deleteStaff(${staff.id}, '${staff.full_name}')">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-                
-            } catch (error) {
-                console.error('Error loading staff:', error);
-            }
+    try {
+        const { data, error } = await supabaseClient
+            .from('employees')
+            .select('*')
+            .eq('role', 'supervisor')
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        const container = document.getElementById('staff-list-container');
+        
+        if (!data || data.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <h3>لا توجد مشرفين</h3>
+                </div>
+            `;
+            return;
         }
         
+        container.innerHTML = data.map(staff => `
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="list-item-title">${staff.full_name}</div>
+                    <div class="list-item-subtitle">
+                        <span><i class="fas fa-phone"></i> ${staff.phone_number}</span>
+                        <span>•</span>
+                        <span><i class="fas fa-key"></i> ${staff.password}</span>
+                        <span>•</span>
+                        <span class="badge ${staff.is_active ? 'badge-success' : 'badge-warning'}">
+                            ${staff.is_active ? 'نشط' : 'معطل'}
+                        </span>
+                    </div>
+                </div>
+                <div class="list-item-actions">
+                    <button class="action-btn" onclick="openEditStaff('${staff.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);" 
+                            onclick="deleteStaff('${staff.id}', '${staff.full_name}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error loading staff:', error);
+    }
+}
+
         function generatePassword() {
             document.getElementById('s-pass').value = Math.floor(100000 + Math.random() * 900000);
         }
@@ -1341,6 +1475,7 @@
             const name = document.getElementById('s-name').value.trim();
             const phone = document.getElementById('s-phone').value.trim();
             const password = document.getElementById('s-pass').value;
+            const shift = document.getElementById('s-shift').value;
             const isActive = document.getElementById('s-active').value === 'true';
             const btn = document.getElementById('save-staff-btn');
             
@@ -1359,6 +1494,11 @@
                 return;
             }
             
+            if (!shift) {
+                showToast('الرجاء اختيار الوردية', 'error');
+                return;
+            }
+            
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>جاري الحفظ...</span>';
             btn.disabled = true;
             
@@ -1367,6 +1507,7 @@
                     full_name: name,
                     phone_number: phone,
                     password: password,
+                    shift_type: shift,
                     role: 'supervisor',
                     is_active: isActive,
                     created_at: new Date().toISOString()
@@ -1412,6 +1553,7 @@
                     document.getElementById('edit-staff-id').value = staffId;
                     document.getElementById('edit-s-name').value = data.full_name;
                     document.getElementById('edit-s-phone').value = data.phone_number;
+                    document.getElementById('edit-s-shift').value = data.shift_type || '';
                     document.getElementById('edit-s-active').value = data.is_active;
                     openModal('edit-staff-modal');
                 }
@@ -1426,6 +1568,7 @@
             const name = document.getElementById('edit-s-name').value.trim();
             const phone = document.getElementById('edit-s-phone').value.trim();
             const password = document.getElementById('edit-s-pass').value;
+            const shift = document.getElementById('edit-s-shift').value;
             const isActive = document.getElementById('edit-s-active').value === 'true';
             
             if (!name) {
@@ -1438,9 +1581,15 @@
                 return;
             }
             
+            if (!shift) {
+                showToast('الرجاء اختيار الوردية', 'error');
+                return;
+            }
+            
             const updateData = {
                 full_name: name,
                 phone_number: phone,
+                shift_type: shift,
                 is_active: isActive
             };
             
@@ -1539,7 +1688,7 @@
                         <div class="list-item-content">
                             <div class="list-item-title">${report.employees?.full_name || 'مشرف'}</div>
                             <div class="list-item-subtitle">
-                                <span>${report.shift_name}</span>
+                                <span class="badge-primary">${report.shift_name}</span>
                                 <span>•</span>
                                 <span>${new Date(report.created_at).toLocaleDateString('ar-YE')}</span>
                             </div>
@@ -1586,13 +1735,13 @@
                 container.innerHTML = data.map(notification => `
                     <div class="list-item">
                         <div class="list-item-content">
-                            <div class="list-item-title">${notification.title || 'إشعار'}</div>
+                            <div class="list-item-title">${notification.title}</div>
                             <div class="list-item-subtitle">
                                 <span>${notification.message}</span>
                             </div>
                             <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">
-                                ${new Date(notification.created_at).toLocaleString('ar-YE')}
-                                ${notification.receiver_id ? '• إشعار فردي' : '• إشعار جماعي'}
+                                <i class="fas fa-clock"></i> ${new Date(notification.created_at).toLocaleString('ar-YE')}
+                                ${notification.receiver_id ? '<span style="margin-right: 10px;">• <i class="fas fa-user"></i> إشعار فردي</span>' : '<span style="margin-right: 10px;">• <i class="fas fa-users"></i> إشعار جماعي</span>'}
                             </div>
                         </div>
                     </div>
@@ -1654,11 +1803,16 @@
             }
             
             try {
+                // إضافة اسم المدير الحالي إلى عنوان الإشعار
+                const managerName = State.currentUser?.full_name || 'المدير';
+                const notificationTitle = `إشعار من المدير ${managerName}`;
+                
                 const notificationData = {
-                    title: type === 'all' ? 'إشعار جماعي' : 'إشعار فردي',
+                    title: notificationTitle,
                     message: message,
                     receiver_id: receiverId,
                     sender_id: State.currentUser.id,
+                    sender_name: managerName,
                     created_at: new Date().toISOString()
                 };
                 
@@ -1749,7 +1903,6 @@
             if (State.currentUser.role === 'admin') {
                 switchTab('notifications');
             } else {
-                // للمشرفين، يمكن إضافة مودال عرض الإشعارات
                 loadSupervisorNotifications();
             }
         }
@@ -1781,13 +1934,10 @@
 
         // ============ تهيئة التطبيق ============
         document.addEventListener('DOMContentLoaded', () => {
-            // إعداد نموذج التقرير
+            // إعداد نموذج التقرير للمشرف
             const reportForm = document.getElementById('report-form');
             if (reportForm) {
-                reportForm.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    submitReport();
-                });
+                reportForm.addEventListener('submit', submitReport);
             }
             
             // التحقق من الجلسة السابقة
@@ -1806,6 +1956,22 @@
             if (document.getElementById('history-from')) {
                 setDefaultDates();
             }
+            
+            // إضافة event listener للجسم لمنع التكبير على الهاتف
+            document.body.addEventListener('touchstart', function(e) {
+                if (e.touches.length > 1) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            let lastTouchEnd = 0;
+            document.body.addEventListener('touchend', function(e) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    e.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
         });
     </script>
 </body>
