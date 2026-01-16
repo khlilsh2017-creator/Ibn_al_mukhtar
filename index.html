@@ -1,1198 +1,1199 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <!-- تعديل viewport لجعل الواجهة مخصصة للهاتف -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#2563eb">
-    <title>نظام إدارة الإنتاج | النسخة المتكاملة 2026</title>
-
-    <!-- Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-
-    <style>
-        :root {
-            --primary: #2563eb;
-            --primary-dark: #1d4ed8;
-            --secondary: #8b5cf6;
-            --dark: #0f172a;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --bg-app: #f8fafc;
-            --card-bg: #ffffff;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --border: #e2e8f0;
-            --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --shadow-medium: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            --radius-md: 16px;
-            --radius-lg: 24px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            font-family: 'Cairo', sans-serif;
-            background-color: var(--bg-app);
-            color: var(--text-primary);
-            height: 100vh;
-            overflow: hidden;
-            user-select: none;
-            touch-action: manipulation;
-            /* منع التكبير على الهواتف */
-            -webkit-text-size-adjust: 100%;
-            -ms-text-size-adjust: 100%;
-        }
-
-        /* إصلاحات للهاتف فقط */
-        @media only screen and (max-width: 768px) {
-            body {
-                height: -webkit-fill-available;
-            }
-            
-            #app-view {
-                height: 100vh;
-                height: -webkit-fill-available;
-            }
-            
-            .modal-dialog {
-                width: 95% !important;
-                margin: 10px;
-                padding: 20px !important;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr) !important;
-            }
-            
-            .list-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-            
-            .list-item-actions {
-                align-self: flex-end;
-            }
-            
-            .modal-footer {
-                flex-direction: column;
-            }
-            
-            .modal-footer .btn {
-                width: 100%;
-            }
-        }
-
-        /* منع ظهور القوائم المختصرة على الهاتف */
-        * {
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
-
-        input, textarea {
-            -webkit-user-select: text;
-            -khtml-user-select: text;
-            -moz-user-select: text;
-            -ms-user-select: text;
-            user-select: text;
-        }
-
-        /* شاشة تسجيل الدخول */
-        #auth-view {
-            position: fixed;
-            inset: 0;
-            background: linear-gradient(135deg, var(--bg-app) 0%, #e0f2fe 100%);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            padding: 30px 20px;
-            justify-content: center;
-            animation: fadeIn 0.5s ease;
-            overflow-y: auto;
-        }
-
-        .auth-brand {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .auth-logo {
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-
-        .auth-logo i {
-            font-size: 48px;
-            color: white;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-            position: relative;
-        }
-
-        .input-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 8px;
-            padding-right: 5px;
-        }
-
-        .input-field {
-            width: 100%;
-            padding: 18px 20px;
-            background: var(--card-bg);
-            border: 2px solid var(--border);
-            border-radius: var(--radius-md);
-            font-family: 'Cairo';
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-primary);
-            transition: var(--transition);
-            outline: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-        }
-
-        .input-field:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        .btn {
-            padding: 18px 24px;
-            border-radius: var(--radius-md);
-            border: none;
-            font-family: 'Cairo';
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            width: 100%;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: white;
-            box-shadow: var(--shadow-medium);
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-        }
-
-        /* الهيكل الرئيسي */
-        #app-view {
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .top-navbar {
-            height: 70px;
-            background: var(--card-bg);
-            padding: 0 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: var(--shadow-soft);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            flex-shrink: 0;
-        }
-
-        .app-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            padding-bottom: 100px;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        /* شريط التنقل السفلي */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 80px;
-            background: var(--card-bg);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border-top: 1px solid var(--border);
-            padding: 10px 0;
-            z-index: 1000;
-            flex-shrink: 0;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: var(--text-secondary);
-            font-size: 11px;
-            font-weight: 700;
-            transition: var(--transition);
-            cursor: pointer;
-            padding: 10px 15px;
-            border-radius: var(--radius-md);
-            min-width: 70px;
-        }
-
-        .nav-item.active {
-            color: var(--primary);
-            background: rgba(37, 99, 235, 0.1);
-        }
-
-        .nav-icon {
-            font-size: 22px;
-            margin-bottom: 5px;
-        }
-
-        /* البطاقات والمكونات */
-        .card {
-            background: var(--card-bg);
-            border-radius: var(--radius-lg);
-            padding: 24px;
-            box-shadow: var(--shadow-soft);
-            margin-bottom: 20px;
-            border: 1px solid var(--border);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .card-title {
-            font-size: 18px;
-            font-weight: 800;
-            color: var(--dark);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 16px;
-            margin-bottom: 25px;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-            border-radius: var(--radius-md);
-            padding: 20px;
-            text-align: center;
-            border: 1px solid var(--border);
-        }
-
-        .stat-value {
-            font-size: 28px;
-            font-weight: 900;
-            color: var(--dark);
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-
-        /* قوائم البيانات */
-        .data-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .list-item {
-            background: var(--card-bg);
-            padding: 18px;
-            border-radius: var(--radius-md);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: var(--shadow-soft);
-            border: 1px solid var(--border);
-            transition: var(--transition);
-        }
-
-        .list-item:hover {
-            border-color: var(--primary);
-        }
-
-        .list-item-content {
-            flex: 1;
-        }
-
-        .list-item-title {
-            font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 4px;
-        }
-
-        .list-item-subtitle {
-            font-size: 13px;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .list-item-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .action-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(37, 99, 235, 0.1);
-            color: var(--primary);
-            border: none;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .action-btn:hover {
-            background: var(--primary);
-            color: white;
-        }
-
-        .badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .badge-success {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-        }
-
-        .badge-warning {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--warning);
-        }
-
-        .badge-primary {
-            background: rgba(37, 99, 235, 0.1);
-            color: var(--primary);
-        }
-
-        /* المودالات */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(8px);
-            z-index: 5000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            animation: fadeIn 0.3s ease;
-            -webkit-overflow-scrolling: touch;
-            overflow-y: auto;
-        }
-
-        .modal-dialog {
-            background: var(--card-bg);
-            border-radius: var(--radius-lg);
-            padding: 30px;
-            max-width: 500px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        .modal-title {
-            font-size: 22px;
-            font-weight: 900;
-            color: var(--dark);
-        }
-
-        .modal-close {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(37, 99, 235, 0.1);
-            color: var(--primary);
-            border: none;
-            cursor: pointer;
-        }
-
-        .modal-footer {
-            display: flex;
-            gap: 12px;
-            margin-top: 30px;
-        }
-
-        /* الرسوم المتحركة */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideUp {
-            from { 
-                opacity: 0;
-                transform: translateY(50px); 
-            }
-            to { 
-                opacity: 1;
-                transform: translateY(0); 
-            }
-        }
-
-        /* حالات خاصة */
-        .hidden { 
-            display: none !important; 
-        }
-
-        .loading {
-            position: relative;
-            opacity: 0.7;
-            pointer-events: none;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-secondary);
-        }
-
-        .empty-state i {
-            font-size: 48px;
-            margin-bottom: 20px;
-            color: var(--border);
-        }
-
-        /* إشعارات المشرف */
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--danger);
-            color: white;
-            font-size: 10px;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .notification-item {
-            background: #f0f9ff;
-            border-right: 4px solid var(--primary);
-            margin-bottom: 10px;
-        }
-
-        /* تحسينات للهاتف */
-        .input-field:disabled {
-            background-color: #f8fafc;
-            color: var(--text-secondary);
-        }
-
-        /* تحسينات الوردية للمشرف */
-        .shift-info {
-            background: rgba(37, 99, 235, 0.1);
-            padding: 15px;
-            border-radius: var(--radius-md);
-            border: 2px solid var(--primary);
-            margin-bottom: 20px;
-        }
-
-        .shift-info h4 {
-            color: var(--primary);
-            margin-bottom: 8px;
-            font-size: 16px;
-        }
-
-        .shift-info p {
-            color: var(--text-primary);
-            font-weight: 600;
-            font-size: 18px;
-        }
-        </style>
-</head>
-<body>
-    <!-- شاشة تسجيل الدخول -->
-    <section id="auth-view">
-        <div class="auth-brand">
-            <div class="auth-logo">
-                <i class="fas fa-industry"></i>
-            </div>
-            <h1 style="font-weight: 900; font-size: 28px; color: var(--dark);">نظام الإدارة المتكامل</h1>
-            <p style="color: var(--text-secondary);">الإصدار المتقدم 2026</p>
-        </div>
-
-        <div class="input-group">
-            <label class="input-label">رقم الهاتف</label>
-            <input type="tel" id="login-phone" class="input-field" placeholder="7xxxxxxxx" maxlength="9">
-        </div>
-
-        <div class="input-group">
-            <label class="input-label">كلمة المرور</label>
-            <input type="password" id="login-pass" class="input-field" placeholder="••••••" maxlength="6">
-        </div>
-
-        <button class="btn btn-primary" onclick="login()" id="login-btn">
-            <i class="fas fa-sign-in-alt"></i>
-            <span>دخول النظام</span>
-        </button>
-
-        <div id="login-error" class="hidden" style="margin-top: 15px; padding: 12px; background: rgba(239, 68, 68, 0.1); border-radius: var(--radius-md); color: var(--danger); text-align: center; font-weight: 600;">
-            <i class="fas fa-exclamation-circle"></i>
-            <span id="error-text"></span>
-        </div>
-    </section>
-
-    <!-- الواجهة الرئيسية -->
-    <main id="app-view" class="hidden">
-        <!-- شريط التنقل العلوي -->
-        <header class="top-navbar">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <div class="user-avatar" id="user-avatar" style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">م</div>
-                <div>
-                    <div style="font-weight: 700;" id="user-name">المستخدم</div>
-                    <div style="font-size: 12px; color: var(--text-secondary);" id="user-role">دور المستخدم</div>
-                </div>
-            </div>
-            
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <div onclick="showNotifications()" style="position: relative; cursor: pointer;">
-                    <i class="fas fa-bell" style="font-size: 20px; color: var(--text-secondary);"></i>
-                    <div class="notification-badge hidden" id="notification-badge"></div>
-                </div>
-                <div onclick="logout()" style="cursor: pointer;">
-                    <i class="fas fa-sign-out-alt" style="font-size: 20px; color: var(--danger);"></i>
-                </div>
-            </div>
-        </header>
-
-        <!-- المحتوى الرئيسي -->
-        <div class="app-body">
-            <!-- صفحة المشرف -->
-            <section id="supervisor-page" class="hidden">
-                <!-- عرض الوردية المحددة للمشرف -->
-                <div class="shift-info">
-                    <h4><i class="fas fa-calendar-alt"></i> الوردية المخصصة لك</h4>
-                    <p id="current-shift-name">جاري تحميل الوردية...</p>
-                    <small style="color: var(--text-secondary);">الوردية المخصصة لك بشكل دائم من قبل المدير</small>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">تقرير الإنتاج اليومي</div>
-                    </div>
-
-                    <form id="report-form">
-                        <!-- الوردية (غير قابلة للتعديل من قبل المشرف) -->
-                        <div class="input-group">
-                            <label class="input-label">الوردية</label>
-                            <input type="text" id="shift-type" class="input-field" disabled placeholder="سيتم تعيين الوردية من قبل المدير">
-                        </div>
-
-                        <div class="input-group">
-                            <label class="input-label">كمية الإنتاج (وحدة)</label>
-                            <input type="number" id="prod-qty" class="input-field" placeholder="أدخل عدد الوحدات" min="0" required>
-                        </div>
-
-                        <div class="input-group">
-                            <label class="input-label">الوزن الإجمالي (كجم)</label>
-                            <input type="number" id="prod-weight" class="input-field" placeholder="0.00" min="0" step="0.01" required>
-                        </div>
-
-                        <div class="input-group">
-                            <label class="input-label">ملاحظات تشغيلية</label>
-                            <textarea id="prod-notes" class="input-field" rows="3" placeholder="أدخل أي ملاحظات مهمة..."></textarea>
-                        </div>
-
-                        <div style="display: flex; gap: 10px; margin-top: 25px;">
-                            <button type="button" class="btn" style="background: var(--card-bg); color: var(--text-primary); border: 2px solid var(--border);" onclick="clearForm()">
-                                <i class="fas fa-eraser"></i>
-                                مسح النموذج
-                            </button>
-                            <button type="submit" class="btn btn-primary" id="submit-btn">
-                                <i class="fas fa-paper-plane"></i>
-                                إرسال التقرير
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- إشعارات المشرف -->
-                <div class="card" id="supervisor-notifications">
-                    <div class="card-header">
-                        <div class="card-title">الإشعارات</div>
-                        <button class="action-btn" onclick="loadSupervisorNotifications()">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
-                    </div>
-                    <div class="data-list" id="supervisor-notifications-list">
-                        <div class="empty-state">
-                            <i class="fas fa-bell-slash"></i>
-                            <h3>لا توجد إشعارات</h3>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- صفحة المدير -->
-            <section id="admin-page" class="hidden">
-                <!-- قسم الإحصائيات -->
-                <div id="admin-dash">
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <i class="fas fa-box" style="font-size: 24px; color: var(--primary); margin-bottom: 10px;"></i>
-                            <div class="stat-value" id="stat-today-qty">0</div>
-                            <div class="stat-label">إنتاج اليوم</div>
-                        </div>
-                        <div class="stat-card">
-                            <i class="fas fa-weight-hanging" style="font-size: 24px; color: var(--primary); margin-bottom: 10px;"></i>
-                            <div class="stat-value" id="stat-today-weight">0</div>
-                            <div class="stat-label">أوزان اليوم</div>
-                        </div>
-                        <div class="stat-card">
-                            <i class="fas fa-users" style="font-size: 24px; color: var(--primary); margin-bottom: 10px;"></i>
-                            <div class="stat-value" id="stat-active-supervisors">0</div>
-                            <div class="stat-label">مشرفين نشطين</div>
-                        </div>
-                        <div class="stat-card">
-                            <i class="fas fa-clipboard-check" style="font-size: 24px; color: var(--primary); margin-bottom: 10px;"></i>
-                            <div class="stat-value" id="stat-total-reports">0</div>
-                            <div class="stat-label">تقارير اليوم</div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">تقارير اليوم</div>
-                            <button class="action-btn" onclick="loadReports()">
-                                <i class="fas fa-sync-alt"></i>
-                            </button>
-                        </div>
-                        <div class="data-list" id="reports-list-container"></div>
-                    </div>
-                </div>
-
-                <!-- قسم المشرفين -->
-                <div id="admin-staff" class="hidden">
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">إدارة المشرفين</div>
-                            <button class="btn btn-primary" style="width: auto; padding: 10px 20px;" onclick="openStaffModal()">
-                                <i class="fas fa-user-plus"></i>
-                                إضافة مشرف
-                            </button>
-                        </div>
-                        <div class="data-list" id="staff-list-container"></div>
-                    </div>
-                </div>
-
-                <!-- قسم التقارير التاريخية -->
-                <div id="admin-history" class="hidden">
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">التقارير التاريخية</div>
-                        </div>
-                        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                            <div class="input-group" style="flex: 1;">
-                                <label class="input-label">من تاريخ</label>
-                                <input type="date" id="history-from" class="input-field">
-                            </div>
-                            <div class="input-group" style="flex: 1;">
-                                <label class="input-label">إلى تاريخ</label>
-                                <input type="date" id="history-to" class="input-field">
-                            </div>
-                            <button class="btn btn-primary" style="width: auto; padding: 10px 20px; align-self: flex-end;" onclick="loadHistoricalReports()">
-                                <i class="fas fa-search"></i>
-                                بحث
-                            </button>
-                        </div>
-                        <div class="data-list" id="historical-reports-container"></div>
-                    </div>
-                </div>
-
-                <!-- قسم الإشعارات -->
-                <div id="admin-notifications" class="hidden">
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">إدارة الإشعارات</div>
-                            <button class="btn btn-primary" style="width: auto; padding: 10px 20px;" onclick="openNotificationModal()">
-                                <i class="fas fa-paper-plane"></i>
-                                إرسال إشعار
-                            </button>
-                        </div>
-                        <div class="data-list" id="admin-notifications-list"></div>
-                    </div>
-                </div>
-
-                <!-- قسم إدارة الحساب -->
-                <div id="admin-profile" class="hidden">
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">إدارة حسابي</div>
-                            <button class="btn btn-primary" style="width: auto; padding: 10px 20px;" onclick="openEditProfileModal()">
-                                <i class="fas fa-edit"></i>
-                                تعديل البيانات
-                            </button>
-                        </div>
-                        <div class="input-group">
-                            <label class="input-label">الاسم الكامل</label>
-                            <input type="text" id="profile-name" class="input-field" readonly>
-                        </div>
-                        <div class="input-group">
-                            <label class="input-label">رقم الهاتف</label>
-                            <input type="text" id="profile-phone" class="input-field" readonly>
-                        </div>
-                        <div class="input-group">
-                            <label class="input-label">كلمة المرور</label>
-                            <input type="password" id="profile-password" class="input-field" readonly>
-                        </div>
-                        <div class="input-group">
-                            <label class="input-label">الدور</label>
-                            <input type="text" id="profile-role" class="input-field" readonly>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>
-
-        <!-- شريط التنقل السفلي للمدير -->
-        <nav class="bottom-nav admin-ui hidden">
-            <div class="nav-item active" id="nav-dash" onclick="switchTab('dash')">
-                <div class="nav-icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <span>الإحصائيات</span>
-            </div>
-            <div class="nav-item" id="nav-staff" onclick="switchTab('staff')">
-                <div class="nav-icon">
-                    <i class="fas fa-users"></i>
-                </div>
-                <span>المشرفين</span>
-            </div>
-            <div class="nav-item" id="nav-history" onclick="switchTab('history')">
-                <div class="nav-icon">
-                    <i class="fas fa-history"></i>
-                </div>
-                <span>التاريخ</span>
-            </div>
-            <div class="nav-item" id="nav-notifications" onclick="switchTab('notifications')">
-                <div class="nav-icon">
-                    <i class="fas fa-bell"></i>
-                </div>
-                <span>الإشعارات</span>
-            </div>
-            <div class="nav-item" id="nav-profile" onclick="switchTab('profile')">
-                <div class="nav-icon">
-                    <i class="fas fa-user"></i>
-                </div>
-                <span>حسابي</span>
-            </div>
-        </nav>
-    </main>
-
-    <!-- مودال إضافة مشرف -->
-    <div class="modal-overlay" id="staff-modal">
-        <div class="modal-dialog">
-            <div class="modal-header">
-                <div class="modal-title">إضافة مشرف جديد</div>
-                <button class="modal-close" onclick="closeModal('staff-modal')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">الاسم الكامل</label>
-                <input type="text" id="s-name" class="input-field" placeholder="أدخل الاسم الكامل">
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">رقم الهاتف</label>
-                <input type="tel" id="s-phone" class="input-field" placeholder="7xxxxxxxx" pattern="[7][0-9]{8}">
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">كلمة المرور</label>
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="s-pass" class="input-field" readonly style="flex: 1; font-family: monospace; letter-spacing: 2px; color: var(--primary);">
-                    <button type="button" class="action-btn" onclick="generatePassword()">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">الوردية</label>
-                <select id="s-shift" class="input-field">
-                    <option value="">اختر الوردية</option>
-                    <option value="الوردية الأولى (صباحاً)">الوردية الأولى (صباحاً)</option>
-                    <option value="الوردية الثانية (مساءً)">الوردية الثانية (مساءً)</option>
-                    <option value="الوردية الثالثة (ليلاً)">الوردية الثالثة (ليلاً)</option>
-                </select>
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">حالة الحساب</label>
-                <select id="s-active" class="input-field">
-                    <option value="true">نشط</option>
-                    <option value="false">معطل</option>
-                </select>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-primary" id="save-staff-btn" onclick="saveStaff()">
-                    <i class="fas fa-save"></i>
-                    حفظ المشرف
-                </button>
-                <button class="btn" style="background: var(--card-bg); color: var(--text-primary); border: 2px solid var(--border);" onclick="closeModal('staff-modal')">
-                    <i class="fas fa-times"></i>
-                    إلغاء
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- مودال تعديل المشرف -->
-    <div class="modal-overlay" id="edit-staff-modal">
-        <div class="modal-dialog">
-            <div class="modal-header">
-                <div class="modal-title">تعديل بيانات المشرف</div>
-                <button class="modal-close" onclick="closeModal('edit-staff-modal')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <input type="hidden" id="edit-staff-id">
-
-            <div class="input-group">
-                <label class="input-label">الاسم الكامل</label>
-                <input type="text" id="edit-s-name" class="input-field">
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">رقم الهاتف</label>
-                <input type="tel" id="edit-s-phone" class="input-field" pattern="[7][0-9]{8}">
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">كلمة المرور الجديدة</label>
-                <input type="password" id="edit-s-pass" class="input-field" placeholder="اتركه فارغاً للحفاظ على كلمة المرور الحالية">
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">الوردية</label>
-                <select id="edit-s-shift" class="input-field">
-                    <option value="">اختر الوردية</option>
-                    <option value="الوردية الأولى (صباحاً)">الوردية الأولى (صباحاً)</option>
-                    <option value="الوردية الثانية (مساءً)">الوردية الثانية (مساءً)</option>
-                    <option value="الوردية الثالثة (ليلاً)">الوردية الثالثة (ليلاً)</option>
-                </select>
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">حالة الحساب</label>
-                <select id="edit-s-active" class="input-field">
-                    <option value="true">نشط</option>
-                    <option value="false">معطل</option>
-                </select>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-primary" onclick="updateStaff()">
-                    <i class="fas fa-save"></i>
-                    حفظ التغييرات
-                </button>
-                <button class="btn" style="background: var(--card-bg); color: var(--text-primary); border: 2px solid var(--border);" onclick="closeModal('edit-staff-modal')">
-                    <i class="fas fa-times"></i>
-                    إلغاء
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- مودال تعديل بيانات المدير -->
-    <div class="modal-overlay" id="edit-profile-modal">
-        <div class="modal-dialog">
-            <div class="modal-header">
-                <div class="modal-title">تعديل بيانات الحساب</div>
-                <button class="modal-close" onclick="closeModal('edit-profile-modal')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">الاسم الكامل</label>
-                <input type="text" id="edit-profile-name" class="input-field">
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">رقم الهاتف</label>
-                <input type="tel" id="edit-profile-phone" class="input-field" pattern="[7][0-9]{8}">
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">كلمة المرور الجديدة</label>
-                <input type="password" id="edit-profile-pass" class="input-field" placeholder="اتركه فارغاً للحفاظ على كلمة المرور الحالية">
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-primary" onclick="updateProfile()">
-                    <i class="fas fa-save"></i>
-                    حفظ التغييرات
-                </button>
-                <button class="btn" style="background: var(--card-bg); color: var(--text-primary); border: 2px solid var(--border);" onclick="closeModal('edit-profile-modal')">
-                    <i class="fas fa-times"></i>
-                    إلغاء
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- مودال إرسال إشعار -->
-    <div class="modal-overlay" id="notification-modal">
-        <div class="modal-dialog">
-            <div class="modal-header">
-                <div class="modal-title">إرسال إشعار</div>
-                <button class="modal-close" onclick="closeModal('notification-modal')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">نوع الإرسال</label>
-                <select id="notification-type" class="input-field" onchange="toggleReceiverSelect()">
-                    <option value="all">جميع المشرفين</option>
-                    <option value="specific">مشرف محدد</option>
-                </select>
-            </div>
-
-            <div class="input-group" id="receiver-select" style="display: none;">
-                <label class="input-label">اختر المشرف</label>
-                <select id="notification-receiver" class="input-field">
-                    <!-- سيتم ملؤه ديناميكياً -->
-                </select>
-            </div>
-
-            <div class="input-group">
-                <label class="input-label">نص الإشعار</label>
-                <textarea id="notification-message" class="input-field" rows="4" placeholder="اكتب نص الإشعار هنا..."></textarea>
-            </div>
-
-            <div class="modal-footer">
-                <button class="btn btn-primary" onclick="sendNotification()">
-                    <i class="fas fa-paper-plane"></i>
-                    إرسال الإشعار
-                </button>
-                <button class="btn" style="background: var(--card-bg); color: var(--text-primary); border: 2px solid var(--border);" onclick="closeModal('notification-modal')">
-                    <i class="fas fa-times"></i>
-                    إلغاء
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // ============ التهيئة والإعدادات ============
-        const CONFIG = {
-            SUPABASE_URL: 'https://jwarexfdgdlooqjjrrtb.supabase.co',
-            SUPABASE_KEY: 'sb_publishable_iIW_zpppxKyZQ-ASltoeMA_W0aZVz-p',
-            APP_VERSION: '3.0.0'
-        };
-
-        const supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
-
-        // ============ إدارة الحالة ============
-        const State = {
-            currentUser: null,
-            currentStaffId: null,
-            
-            setUser(user) {
-                this.currentUser = user;
-                localStorage.setItem('fac_session_2026', JSON.stringify(user));
-                this.updateUserInfo();
-            },
-            
-            updateUserInfo() {
-                if (this.currentUser) {
-                    const avatar = document.getElementById('user-avatar');
-                    const name = this.currentUser.full_name || 'مستخدم';
-                    avatar.textContent = name.charAt(0);
-                    document.getElementById('user-name').textContent = name;
-                    document.getElementById('user-role').textContent = 
-                        this.currentUser.role === 'admin' ? 'مدير النظام' : 'مشرف إنتاج';
-                }
-            },
-            
-            clear() {
-                this.currentUser = null;
-                localStorage.removeItem('fac_session_2026');
-            }
-        };
-
-        // ============ دوال المصادقة ============
-        async function login() {
-            const phone = document.getElementById('login-phone').value.trim();
-            const password = document.getElementById('login-pass').value;
-            const btn = document.getElementById('login-btn');
-            
-            if (!validatePhone(phone)) {
-                showError('رقم الهاتف غير صحيح');
-                return;
-            }
-            
-            if (password.length !== 6) {
-                showError('كلمة المرور يجب أن تكون 6 أرقام');
-                return;
-            }
-            
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>جاري التحقق...</span>';
-            btn.disabled = true;
-            
-            try {
-                const { data, error } = await supabaseClient
-                    .from('employees')
-                    .select('*')
-                    .eq('phone_number', phone)
-                    .eq('password', password)
-                    .single();
-                
-                if (error) throw error;
-                
-                if (data) {
-                    State.setUser(data);
-                    redirectToDashboard();
-                    showToast(`مرحباً ${data.full_name}!`, 'success');
-                } else {
-                    showError('بيانات الدخول غير صحيحة');
-                }
-            } catch (error) {
-                showError('حدث خطأ في الاتصال');
-            } finally {
-                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i><span>دخول النظام</span>';
-                btn.disabled = false;
-            }
-        }
-        
-        function validatePhone(phone) {
-            return /^7[0-9]{8}$/.test(phone);
-        }
-        
-        function showError(message) {
-            const errorEl = document.getElementById('login-error');
-            const errorText = document.getElementById('error-text');
-            errorText.textContent = message;
-            errorEl.classList.remove('hidden');
-            
-            setTimeout(() => {
-                errorEl.classList.add('hidden');
-            }, 5000);
-        }
-        
-        async function redirectToDashboard() {
-            document.getElementById('auth-view').classList.add('hidden');
-            document.getElementById('app-view').classList.remove('hidden');
-            
-            if (State.currentUser.role === 'admin') {
-                document.getElementById('admin-page').classList.remove('hidden');
-                document.querySelectorAll('.admin-ui').forEach(el => el.classList.remove('hidden'));
-                switchTab('dash');
-                loadDashboardStats();
-            } else {
-                document.getElementById('supervisor-page').classList.remove('hidden');
-                await loadSupervisorShift();
-                loadSupervisorNotifications();
-            }
-        }
-        
-        function logout() {
-            if (confirm('هل تريد تسجيل الخروج؟')) {
-                State.clear();
-                location.reload();
-            }
-        }
-
-        // ============ دوال المشرف ============
-        async function loadSupervisorShift() {
-            try {
-                if (State.currentUser && State.currentUser.shift_type) {
-                    document.getElementById('shift-type').value = State.currentUser.shift_type;
-                    document.getElementById('current-shift-name').textContent = State.currentUser.shift_type;
-                    document.getElementById('submit-btn').disabled = false;
-                } else {
-                    showToast('لم يتم تعيين وردية لك. الرجاء الاتصال بالمدير.', 'warning');
-                    document.getElementById('submit-btn').disabled = true;
-                }
-            } catch (error) {
-                console.error('Error loading supervisor shift:', error);
-            }
-        }
-        
-        async function submitReport(e) {
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <!-- تعديل viewport لجعل الواجهة مخصصة للهاتف -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#2563eb">
+    <title>نظام إدارة الإنتاج | النسخة المتكاملة 2026</title>
+
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #8b5cf6;
+            --dark: #0f172a;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-app: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-medium: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-app);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            touch-action: manipulation;
+            /* منع التكبير على الهواتف */
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+
+        /* إصلاحات للهاتف فقط */
+        @media only screen and (max-width: 768px) {
+            body {
+                height: -webkit-fill-available;
+            }
+            
+            #app-view {
+                height: 100vh;
+                height: -webkit-fill-available;
+            }
+            
+            .modal-dialog {
+                width: 95% !important;
+                margin: 10px;
+                padding: 20px !important;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+            
+            .list-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .list-item-actions {
+                align-self: flex-end;
+            }
+            
+            .modal-footer {
+                flex-direction: column;
+            }
+            
+            .modal-footer .btn {
+                width: 100%;
+            }
+        }
+
+        /* منع ظهور القوائم المختصرة على الهاتف */
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        input, textarea {
+            -webkit-user-select: text;
+            -khtml-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
+        /* شاشة تسجيل الدخول */
+        #auth-view {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, var(--bg-app) 0%, #e0f2fe 100%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            justify-content: center;
+            animation: fadeIn 0.5s ease;
+            overflow-y: auto;
+        }
+
+        .auth-brand {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .auth-logo {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .auth-logo i {
+            font-size: 48px;
+            color: white;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+            padding-right: 5px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 18px 20px;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            font-family: 'Cairo';
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            transition: var(--transition);
+            outline: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        .input-field:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .btn {
+            padding: 18px 24px;
+            border-radius: var(--radius-md);
+            border: none;
+            font-family: 'Cairo';
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: var(--shadow-medium);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        /* الهيكل الرئيسي */
+        #app-view {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .top-navbar {
+            height: 70px;
+            background: var(--card-bg);
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-soft);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            flex-shrink: 0;
+        }
+
+        .app-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 100px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* شريط التنقل السفلي */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: var(--card-bg);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid var(--border);
+            padding: 10px 0;
+            z-index: 1000;
+            flex-shrink: 0;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 700;
+            transition: var(--transition);
+            cursor: pointer;
+            padding: 10px 15px;
+            border-radius: var(--radius-md);
+            min-width: 70px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            background: rgba(37, 99, 235, 0.1);
+        }
+
+        .nav-icon {
+            font-size: 22px;
+            margin-bottom: 5px;
+        }
+
+        /* البطاقات والمكونات */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-soft);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--dark);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        /* قوائم البيانات */
+        .data-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .list-item {
+            background: var(--card-bg);
+            padding: 18px;
+            border-radius: var(--radius-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        .list-item:hover {
+            border-color: var(--primary);
+        }
+
+        .list-item-content {
+            flex: 1;
+        }
+
+        .list-item-title {
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 4px;
+        }
+
+        .list-item-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .list-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            border: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .badge-primary {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+        }
+
+        /* المودالات */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 5000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+            -webkit-overflow-scrolling: touch;
+            overflow-y: auto;
+        }
+
+        .modal-dialog {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--dark);
+        }
+
+        .modal-close {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            border: none;
+            cursor: pointer;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        /* الرسوم المتحركة */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(50px); 
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0); 
+            }
+        }
+
+        /* حالات خاصة */
+        .hidden { 
+            display: none !important; 
+        }
+
+        .loading {
+            position: relative;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: var(--border);
+        }
+
+        /* إشعارات المشرف */
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger);
+            color: white;
+            font-size: 10px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-item {
+            background: #f0f9ff;
+            border-right: 4px solid var(--primary);
+            margin-bottom: 10px;
+        }
+
+        /* تحسينات للهاتف */
+        .input-field:disabled {
+            background-color: #f8fafc;
+            color: var(--text-secondary);
+        }
+
+        /* تحسينات الوردية للمشرف */
+        .shift-info {
+            background: rgba(37, 99, 235, 0.1);
+            padding: 15px;
+            border-radius: var(--radius-md);
+            border: 2px solid var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .shift-info h4 {
+            color: var(--primary);
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .shift-info p {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 18px;
+        }
+        </style>
+</head>
+<body>
+    <!-- شاشة تسجيل الدخول -->
+    <section id="auth-view">
+        <div class="auth-brand">
+            <div class="auth-logo">
+                <i class="fas fa-industry"></i>
+            </div>
+            <h1 style="font-weight: 900; font-size: 28px; color: var(--dark);">نظام الإدارة المتكامل</h1>
+            <p style="color: var(--text-secondary);">الإصدار المتقدم 2026</p>
+        </div>
+
+        <div class="input-group">
+            <label class="input-label">رقم الهاتف</label>
+            <input type="tel" id="login-phone" class="input-field" placeholder="7xxxxxxxx" maxlength="9">
+        </div>
+
+        <div class="input-group">
+            <label class="input-label">كلمة المرور</label>
+            <input type="password" id="login-pass" class="input-field" placeholder="••••••" maxlength="6">
+        </div>
+
+        <button class="btn btn-primary" onclick="login()" id="login-btn">
+            <i class="fas fa-sign-in-alt"></i>
+            <span>دخول النظام</span>
+        </button>
+
+        <div id="login-error" class="hidden" style="margin-top: 15px; padding: 12px; background: rgba(239, 68, 68, 0.1); border-radius: var(--radius-md); color: var(--danger); text-align: center; font-weight: 600;">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="error-text"></span>
+        </div>
+    </section>
+
+    <!-- الواجهة الرئيسية -->
+    <main id="app-view" class="hidden">
+        <!-- شريط التنقل العلوي -->
+        <header class="top-navbar">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div class="user-avatar" id="user-avatar" style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">م</div>
+                <div>
+                    <div style="font-weight: 700;" id="user-name">المستخدم</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);" id="user-role">دور المستخدم</div>
+                </div>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div onclick="showNotifications()" style="position: relative; cursor: pointer;">
+                    <i class="fas fa-bell" style="font-size: 20px; color: var(--text-secondary);"></i>
+                    <div class="notification-badge hidden" id="notification-badge"></div>
+                </div>
+                <div onclick="logout()" style="cursor: pointer;">
+                    <i class="fas fa-sign-out-alt" style="font-size: 20px; color: var(--danger);"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- المحتوى الرئيسي -->
+        <div class="app-body">
+            <!-- صفحة المشرف -->
+            <section id="supervisor-page" class="hidden">
+                <!-- عرض الوردية المحددة للمشرف -->
+                <div class="shift-info">
+                    <h4><i class="fas fa-calendar-alt"></i> الوردية المخصصة لك</h4>
+                    <p id="current-shift-name">جاري تحميل الوردية...</p>
+                    <small style="color: var(--text-secondary);">الوردية المخصصة لك بشكل دائم من قبل المدير</small>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">تقرير الإنتاج اليومي</div>
+                    </div>
+
+                    <form id="report-form">
+                        <!-- الوردية (غير قابلة للتعديل من قبل المشرف) -->
+                        <div class="input-group">
+                            <label class="input-label">الوردية</label>
+                            <input type="text" id="shift-type" class="input-field" disabled placeholder="سيتم تعيين الوردية من قبل المدير">
+                        </div>
+
+                        <div class="input-group">
+                            <label class="input-label">كمية الإنتاج (وحدة)</label>
+                            <input type="number" id="prod-qty" class="input-field" placeholder="أدخل عدد الوحدات" min="0" required>
+                        </div>
+
+                        <div class="input-group">
+                            <label class="input-label">الوزن الإجمالي (كجم)</label>
+                            <input type="number" id="prod-weight" class="input-field" placeholder="0.00" min="0" step="0.01" required>
+                        </div>
+
+                        <div class="input-group">
+                            <label class="input-label">ملاحظات تشغيلية</label>
+                            <textarea id="prod-notes" class="input-field" rows="3" placeholder="أدخل أي ملاحظات مهمة..."></textarea>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-top: 25px;">
+                            <button type="button" class="btn" style="background: var(--card-bg); color: var(--text-primary); border: 2px solid var(--border);" onclick="clearForm()">
+                                <i class="fas fa-eraser"></i>
+                                مسح النموذج
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="submit-btn">
+                                <i class="fas fa-paper-plane"></i>
+                                إرسال التقرير
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- إشعارات المشرف -->
+                <div class="card" id="supervisor-notifications">
+                    <div class="card-header">
+                        <div class="card-title">الإشعارات</div>
+                        <button class="action-btn" onclick="loadSupervisorNotifications()">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div class="data-list" id="supervisor-notifications-list">
+                        <div class="empty-state">
+                            <i class="fas fa-bell-slash"></i>
+                            <h3>لا توجد إشعارات</h3>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- صفحة المدير -->
+            <section id="admin-page" class="hidden">
+                <!-- قسم الإحصائيات -->
+                <div id="admin-dash">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <i class="fas fa-box" style="font-size: 24px; color: var(--primary); margin-bottom: 10px;"></i>
+                            <div class="stat-value" id="stat-today-qty">0</div>
+                            <div class="stat-label">إنتاج اليوم</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-weight-hanging" style="font-size: 24px; color: var(--primary); margin-bottom: 10px;"></i>
+                            <div class="stat-value" id="stat-today-weight">0</div>
+                            <div class="stat-label">أوزان اليوم</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-users" style="font-size: 24px; color: var(--primary); margin-bottom: 10px;"></i>
+                            <div class="stat-value" id="stat-active-supervisors">0</div>
+                            <div class="stat-label">مشرفين نشطين</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-clipboard-check" style="font-size: 24px; color: var(--primary); margin-bottom: 10px;"></i>
+                            <div class="stat-value" id="stat-total-reports">0</div>
+                            <div class="stat-label">تقارير اليوم</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">تقارير اليوم</div>
+                            <button class="action-btn" onclick="loadReports()">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                        <div class="data-list" id="reports-list-container"></div>
+                    </div>
+                </div>
+
+                <!-- قسم المشرفين -->
+                <div id="admin-staff" class="hidden">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">إدارة المشرفين</div>
+                            <button class="btn btn-primary" style="width: auto; padding: 10px 20px;" onclick="openStaffModal()">
+                                <i class="fas fa-user-plus"></i>
+                                إضافة مشرف
+                            </button>
+                        </div>
+                        <div class="data-list" id="staff-list-container"></div>
+                    </div>
+                </div>
+
+                <!-- قسم التقارير التاريخية -->
+                <div id="admin-history" class="hidden">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">التقارير التاريخية</div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                            <div class="input-group" style="flex: 1;">
+                                <label class="input-label">من تاريخ</label>
+                                <input type="date" id="history-from" class="input-field">
+                            </div>
+                            <div class="input-group" style="flex: 1;">
+                                <label class="input-label">إلى تاريخ</label>
+                                <input type="date" id="history-to" class="input-field">
+                            </div>
+                            <button class="btn btn-primary" style="width: auto; padding: 10px 20px; align-self: flex-end;" onclick="loadHistoricalReports()">
+                                <i class="fas fa-search"></i>
+                                بحث
+                            </button>
+                        </div>
+                        <div class="data-list" id="historical-reports-container"></div>
+                    </div>
+                </div>
+
+                <!-- قسم الإشعارات -->
+                <div id="admin-notifications" class="hidden">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">إدارة الإشعارات</div>
+                            <button class="btn btn-primary" style="width: auto; padding: 10px 20px;" onclick="openNotificationModal()">
+                                <i class="fas fa-paper-plane"></i>
+                                إرسال إشعار
+                            </button>
+                        </div>
+                        <div class="data-list" id="admin-notifications-list"></div>
+                    </div>
+                </div>
+
+                <!-- قسم إدارة الحساب -->
+                <div id="admin-profile" class="hidden">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">إدارة حسابي</div>
+                            <button class="btn btn-primary" style="width: auto; padding: 10px 20px;" onclick="openEditProfileModal()">
+                                <i class="fas fa-edit"></i>
+                                تعديل البيانات
+                            </button>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">الاسم الكامل</label>
+                            <input type="text" id="profile-name" class="input-field" readonly>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">رقم الهاتف</label>
+                            <input type="text" id="profile-phone" class="input-field" readonly>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">كلمة المرور</label>
+                            <input type="password" id="profile-password" class="input-field" readonly>
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">الدور</label>
+                            <input type="text" id="profile-role" class="input-field" readonly>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- شريط التنقل السفلي للمدير -->
+        <nav class="bottom-nav admin-ui hidden">
+            <div class="nav-item active" id="nav-dash" onclick="switchTab('dash')">
+                <div class="nav-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <span>الإحصائيات</span>
+            </div>
+            <div class="nav-item" id="nav-staff" onclick="switchTab('staff')">
+                <div class="nav-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <span>المشرفين</span>
+            </div>
+            <div class="nav-item" id="nav-history" onclick="switchTab('history')">
+                <div class="nav-icon">
+                    <i class="fas fa-history"></i>
+                </div>
+                <span>التاريخ</span>
+            </div>
+            <div class="nav-item" id="nav-notifications" onclick="switchTab('notifications')">
+                <div class="nav-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <span>الإشعارات</span>
+            </div>
+            <div class="nav-item" id="nav-profile" onclick="switchTab('profile')">
+                <div class="nav-icon">
+                    <i class="fas fa-user"></i>
+                </div>
+                <span>حسابي</span>
+            </div>
+        </nav>
+    </main>
+
+    <!-- مودال إضافة مشرف -->
+    <div class="modal-overlay" id="staff-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">إضافة مشرف جديد</div>
+                <button class="modal-close" onclick="closeModal('staff-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">الاسم الكامل</label>
+                <input type="text" id="s-name" class="input-field" placeholder="أدخل الاسم الكامل">
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">رقم الهاتف</label>
+                <input type="tel" id="s-phone" class="input-field" placeholder="7xxxxxxxx" pattern="[7][0-9]{8}">
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">كلمة المرور</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="s-pass" class="input-field" readonly style="flex: 1; font-family: monospace; letter-spacing: 2px; color: var(--primary);">
+                    <button type="button" class="action-btn" onclick="generatePassword()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">الوردية</label>
+                <select id="s-shift" class="input-field">
+                    <option value="">اختر الوردية</option>
+                    <option value="الوردية الأولى (صباحاً)">الوردية الأولى (صباحاً)</option>
+                    <option value="الوردية الثانية (مساءً)">الوردية الثانية (مساءً)</option>
+                    <option value="الوردية الثالثة (ليلاً)">الوردية الثالثة (ليلاً)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">حالة الحساب</label>
+                <select id="s-active" class="input-field">
+                    <option value="true">نشط</option>
+                    <option value="false">معطل</option>
+                </select>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="save-staff-btn" onclick="saveStaff()">
+                    <i class="fas fa-save"></i>
+                    حفظ المشرف
+                </button>
+                <button class="btn" style="background: var(--card-bg); color: var(--text-primary); border: 2px solid var(--border);" onclick="closeModal('staff-modal')">
+                    <i class="fas fa-times"></i>
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال تعديل المشرف -->
+    <div class="modal-overlay" id="edit-staff-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">تعديل بيانات المشرف</div>
+                <button class="modal-close" onclick="closeModal('edit-staff-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <input type="hidden" id="edit-staff-id">
+
+            <div class="input-group">
+                <label class="input-label">الاسم الكامل</label>
+                <input type="text" id="edit-s-name" class="input-field">
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">رقم الهاتف</label>
+                <input type="tel" id="edit-s-phone" class="input-field" pattern="[7][0-9]{8}">
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">كلمة المرور الجديدة</label>
+                <input type="password" id="edit-s-pass" class="input-field" placeholder="اتركه فارغاً للحفاظ على كلمة المرور الحالية">
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">الوردية</label>
+                <select id="edit-s-shift" class="input-field">
+                    <option value="">اختر الوردية</option>
+                    <option value="الوردية الأولى (صباحاً)">الوردية الأولى (صباحاً)</option>
+                    <option value="الوردية الثانية (مساءً)">الوردية الثانية (مساءً)</option>
+                    <option value="الوردية الثالثة (ليلاً)">الوردية الثالثة (ليلاً)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">حالة الحساب</label>
+                <select id="edit-s-active" class="input-field">
+                    <option value="true">نشط</option>
+                    <option value="false">معطل</option>
+                </select>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="updateStaff()">
+                    <i class="fas fa-save"></i>
+                    حفظ التغييرات
+                </button>
+                <button class="btn" style="background: var(--card-bg); color: var(--text-primary); border: 2px solid var(--border);" onclick="closeModal('edit-staff-modal')">
+                    <i class="fas fa-times"></i>
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال تعديل بيانات المدير -->
+    <div class="modal-overlay" id="edit-profile-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">تعديل بيانات الحساب</div>
+                <button class="modal-close" onclick="closeModal('edit-profile-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">الاسم الكامل</label>
+                <input type="text" id="edit-profile-name" class="input-field">
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">رقم الهاتف</label>
+                <input type="tel" id="edit-profile-phone" class="input-field" pattern="[7][0-9]{8}">
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">كلمة المرور الجديدة</label>
+                <input type="password" id="edit-profile-pass" class="input-field" placeholder="اتركه فارغاً للحفاظ على كلمة المرور الحالية">
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="updateProfile()">
+                    <i class="fas fa-save"></i>
+                    حفظ التغييرات
+                </button>
+                <button class="btn" style="background: var(--card-bg); color: var(--text-primary); border: 2px solid var(--border);" onclick="closeModal('edit-profile-modal')">
+                    <i class="fas fa-times"></i>
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال إرسال إشعار -->
+    <div class="modal-overlay" id="notification-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">إرسال إشعار</div>
+                <button class="modal-close" onclick="closeModal('notification-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">نوع الإرسال</label>
+                <select id="notification-type" class="input-field" onchange="toggleReceiverSelect()">
+                    <option value="all">جميع المشرفين</option>
+                    <option value="specific">مشرف محدد</option>
+                </select>
+            </div>
+
+            <div class="input-group" id="receiver-select" style="display: none;">
+                <label class="input-label">اختر المشرف</label>
+                <select id="notification-receiver" class="input-field">
+                    <!-- سيتم ملؤه ديناميكياً -->
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">نص الإشعار</label>
+                <textarea id="notification-message" class="input-field" rows="4" placeholder="اكتب نص الإشعار هنا..."></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="sendNotification()">
+                    <i class="fas fa-paper-plane"></i>
+                    إرسال الإشعار
+                </button>
+                <button class="btn" style="background: var(--card-bg); color: var(--text-primary); border: 2px solid var(--border);" onclick="closeModal('notification-modal')">
+                    <i class="fas fa-times"></i>
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ التهيئة والإعدادات ============
+        const CONFIG = {
+            SUPABASE_URL: 'https://jwarexfdgdlooqjjrrtb.supabase.co',
+            SUPABASE_KEY: 'sb_publishable_iIW_zpppxKyZQ-ASltoeMA_W0aZVz-p',
+            APP_VERSION: '3.0.0'
+        };
+
+        const supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+
+        // ============ إدارة الحالة ============
+        const State = {
+            currentUser: null,
+            currentStaffId: null,
+            
+            setUser(user) {
+                this.currentUser = user;
+                localStorage.setItem('fac_session_2026', JSON.stringify(user));
+                this.updateUserInfo();
+            },
+            
+            updateUserInfo() {
+                if (this.currentUser) {
+                    const avatar = document.getElementById('user-avatar');
+                    const name = this.currentUser.full_name || 'مستخدم';
+                    avatar.textContent = name.charAt(0);
+                    document.getElementById('user-name').textContent = name;
+                    document.getElementById('user-role').textContent = 
+                        this.currentUser.role === 'admin' ? 'مدير النظام' : 'مشرف إنتاج';
+                }
+            },
+            
+            clear() {
+                this.currentUser = null;
+                localStorage.removeItem('fac_session_2026');
+            }
+        };
+
+        // ============ دوال المصادقة ============
+        async function login() {
+            const phone = document.getElementById('login-phone').value.trim();
+            const password = document.getElementById('login-pass').value;
+            const btn = document.getElementById('login-btn');
+            
+            if (!validatePhone(phone)) {
+                showError('رقم الهاتف غير صحيح');
+                return;
+            }
+            
+            if (password.length !== 6) {
+                showError('كلمة المرور يجب أن تكون 6 أرقام');
+                return;
+            }
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>جاري التحقق...</span>';
+            btn.disabled = true;
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('employees')
+                    .select('*')
+                    .eq('phone_number', phone)
+                    .eq('password', password)
+                    .single();
+                
+                if (error) throw error;
+                
+                if (data) {
+                    State.setUser(data);
+                    redirectToDashboard();
+                    showToast(`مرحباً ${data.full_name}!`, 'success');
+                } else {
+                    showError('بيانات الدخول غير صحيحة');
+                }
+            } catch (error) {
+                showError('حدث خطأ في الاتصال');
+            } finally {
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i><span>دخول النظام</span>';
+                btn.disabled = false;
+            }
+        }
+        
+        function validatePhone(phone) {
+            return /^7[0-9]{8}$/.test(phone);
+        }
+        
+        function showError(message) {
+            const errorEl = document.getElementById('login-error');
+            const errorText = document.getElementById('error-text');
+            errorText.textContent = message;
+            errorEl.classList.remove('hidden');
+            
+            setTimeout(() => {
+                errorEl.classList.add('hidden');
+            }, 5000);
+        }
+        
+        async function redirectToDashboard() {
+            document.getElementById('auth-view').classList.add('hidden');
+            document.getElementById('app-view').classList.remove('hidden');
+            
+            if (State.currentUser.role === 'admin') {
+                document.getElementById('admin-page').classList.remove('hidden');
+                document.querySelectorAll('.admin-ui').forEach(el => el.classList.remove('hidden'));
+                switchTab('dash');
+                loadDashboardStats();
+            } else {
+                document.getElementById('supervisor-page').classList.remove('hidden');
+                await loadSupervisorShift();
+                loadSupervisorNotifications();
+            }
+        }
+        
+        function logout() {
+            if (confirm('هل تريد تسجيل الخروج؟')) {
+                State.clear();
+                location.reload();
+            }
+        }
+
+        // ============ دوال المشرف ============
+        async function loadSupervisorShift() {
+            try {
+                if (State.currentUser && State.currentUser.shift_type) {
+                    document.getElementById('shift-type').value = State.currentUser.shift_type;
+                    document.getElementById('current-shift-name').textContent = State.currentUser.shift_type;
+                    document.getElementById('submit-btn').disabled = false;
+                } else {
+                    showToast('لم يتم تعيين وردية لك. الرجاء الاتصال بالمدير.', 'warning');
+                    document.getElementById('submit-btn').disabled = true;
+                }
+            } catch (error) {
+                console.error('Error loading supervisor shift:', error);
+            }
+        }
+        
+                async function submitReport(e) {
             e.preventDefault();
             
+            // التأكد من وجود الوردية
             if (!State.currentUser.shift_type) {
-                showToast('لا توجد وردية محددة لك', 'error');
+                showToast('لا توجد وردية محددة لك، تواصل مع المدير', 'error');
                 return;
             }
             
@@ -1215,17 +1216,18 @@
             btn.disabled = true;
             
             try {
+                // التصحيح هنا: إرسال البيانات التي تتطابق مع الجدول فقط
                 const report = {
                     supervisor_id: State.currentUser.id,
-                    supervisor_name: State.currentUser.full_name,
-                    supervisor_shift: State.currentUser.shift_type,
-                    shift_name: State.currentUser.shift_type,
+                    // supervisor_name: State.currentUser.full_name, // احذف هذا السطر إذا لم تكن قد أنشأت العمود في القاعدة
+                    shift_name: State.currentUser.shift_type, // هذا العمود هو المهم
                     qty: parseFloat(qty),
                     weight: parseFloat(weight),
-                    notes: notes,
-                    created_at: new Date().toISOString()
+                    notes: notes
                 };
                 
+                console.log("جاري إرسال:", report);
+
                 const { error } = await supabaseClient
                     .from('shift_reports')
                     .insert([report]);
@@ -1236,743 +1238,745 @@
                 clearForm();
                 
             } catch (error) {
-                showToast('حدث خطأ في إرسال التقرير', 'error');
+                console.error("خطأ الإرسال:", error);
+                showToast('حدث خطأ: ' + (error.message || 'فشل الإرسال'), 'error');
             } finally {
                 btn.innerHTML = '<i class="fas fa-paper-plane"></i><span>إرسال التقرير</span>';
                 btn.disabled = false;
             }
         }
-        
-        function clearForm() {
-            document.getElementById('report-form').reset();
-            // الحفاظ على قيمة الوردية
-            if (State.currentUser && State.currentUser.shift_type) {
-                document.getElementById('shift-type').value = State.currentUser.shift_type;
-            }
-        }
-        
-        async function loadSupervisorNotifications() {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('notifications')
-                    .select('*')
-                    .or(`receiver_id.eq.${State.currentUser.id},receiver_id.is.null`)
-                    .order('created_at', { ascending: false })
-                    .limit(10);
-                
-                if (error) throw error;
-                
-                const container = document.getElementById('supervisor-notifications-list');
-                
-                if (!data || data.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-bell-slash"></i>
-                            <h3>لا توجد إشعارات</h3>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                container.innerHTML = data.map(notification => `
-                    <div class="list-item notification-item">
-                        <div class="list-item-content">
-                            <div class="list-item-title">${notification.title}</div>
-                            <div class="list-item-subtitle">
-                                <span>${notification.message}</span>
-                            </div>
-                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">
-                                <i class="fas fa-clock"></i> ${new Date(notification.created_at).toLocaleString('ar-YE')}
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-                
-            } catch (error) {
-                console.error('Error loading notifications:', error);
-            }
-        }
 
-        // ============ دوال المدير ============
-        function switchTab(tab) {
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            document.getElementById('admin-dash').classList.add('hidden');
-            document.getElementById('admin-staff').classList.add('hidden');
-            document.getElementById('admin-history').classList.add('hidden');
-            document.getElementById('admin-notifications').classList.add('hidden');
-            document.getElementById('admin-profile').classList.add('hidden');
-            
-            document.getElementById(`nav-${tab}`).classList.add('active');
-            document.getElementById(`admin-${tab}`).classList.remove('hidden');
-            
-            switch(tab) {
-                case 'dash':
-                    loadDashboardStats();
-                    break;
-                case 'staff':
-                    loadStaff();
-                    break;
-                case 'history':
-                    setDefaultDates();
-                    break;
-                case 'notifications':
-                    loadAdminNotifications();
-                    break;
-                case 'profile':
-                    loadProfile();
-                    break;
-            }
-        }
-        
-        async function loadDashboardStats() {
-            try {
-                const today = new Date().toISOString().split('T')[0];
-                
-                const { data: reports } = await supabaseClient
-                    .from('shift_reports')
-                    .select('qty, weight')
-                    .gte('created_at', today);
-                
-                const { data: supervisors } = await supabaseClient
-                    .from('employees')
-                    .select('id')
-                    .eq('role', 'supervisor')
-                    .eq('is_active', true);
-                
-                const totalQty = reports?.reduce((sum, r) => sum + (r.qty || 0), 0) || 0;
-                const totalWeight = reports?.reduce((sum, r) => sum + (r.weight || 0), 0) || 0;
-                
-                document.getElementById('stat-today-qty').textContent = totalQty;
-                document.getElementById('stat-today-weight').textContent = totalWeight.toFixed(1);
-                document.getElementById('stat-active-supervisors').textContent = supervisors?.length || 0;
-                document.getElementById('stat-total-reports').textContent = reports?.length || 0;
-                
-                await loadReports();
-                
-            } catch (error) {
-                console.error('Error loading stats:', error);
-            }
-        }
-        
-        async function loadReports() {
-            try {
-                const today = new Date().toISOString().split('T')[0];
-                
-                const { data, error } = await supabaseClient
-                    .from('shift_reports')
-                    .select(`
-                        *,
-                        employees (
-                            full_name,
-                            phone_number
-                        )
-                    `)
-                    .gte('created_at', today)
-                    .order('created_at', { ascending: false });
-                
-                if (error) throw error;
-                
-                const container = document.getElementById('reports-list-container');
-                
-                if (!data || data.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-clipboard"></i>
-                            <h3>لا توجد تقارير اليوم</h3>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                container.innerHTML = data.map(report => `
-                    <div class="list-item">
-                        <div class="list-item-content">
-                            <div class="list-item-title">${report.employees?.full_name || 'مشرف'}</div>
-                            <div class="list-item-subtitle">
-                                <span class="badge-primary">${report.shift_name}</span>
-                                <span>•</span>
-                                <span><i class="fas fa-clock"></i> ${new Date(report.created_at).toLocaleTimeString('ar-YE', { hour: '2-digit', minute: '2-digit' })}</span>
-                            </div>
-                            <div style="display: flex; gap: 15px; margin-top: 8px;">
-                                <span style="color: var(--primary); font-weight: 700;">
-                                    <i class="fas fa-boxes"></i> ${report.qty} وحدة
-                                </span>
-                                <span style="color: var(--success); font-weight: 700;">
-                                    <i class="fas fa-weight-hanging"></i> ${report.weight} كجم
-                                </span>
-                            </div>
-                            ${report.notes ? `<div style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">${report.notes}</div>` : ''}
-                        </div>
-                    </div>
-                `).join('');
-                
-            } catch (error) {
-                console.error('Error loading reports:', error);
-            }
-        }
-        
-        async function loadStaff() {
-    try {
-        const { data, error } = await supabaseClient
-            .from('employees')
-            .select('*')
-            .eq('role', 'supervisor')
-            .order('created_at', { ascending: false });
-        
-        if (error) throw error;
-        
-        const container = document.getElementById('staff-list-container');
-        
-        if (!data || data.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-users"></i>
-                    <h3>لا توجد مشرفين</h3>
-                </div>
-            `;
-            return;
-        }
-        
-        container.innerHTML = data.map(staff => `
-            <div class="list-item">
-                <div class="list-item-content">
-                    <div class="list-item-title">${staff.full_name}</div>
-                    <div class="list-item-subtitle">
-                        <span><i class="fas fa-phone"></i> ${staff.phone_number}</span>
-                        <span>•</span>
-                        <span><i class="fas fa-key"></i> ${staff.password}</span>
-                        <span>•</span>
-                        <span class="badge ${staff.is_active ? 'badge-success' : 'badge-warning'}">
-                            ${staff.is_active ? 'نشط' : 'معطل'}
-                        </span>
-                    </div>
-                </div>
-                <div class="list-item-actions">
-                    <button class="action-btn" onclick="openEditStaff('${staff.id}')">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="action-btn" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);" 
-                            onclick="deleteStaff('${staff.id}', '${staff.full_name}')">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `).join('');
-        
-    } catch (error) {
-        console.error('Error loading staff:', error);
-    }
-}
-
-        function generatePassword() {
-            document.getElementById('s-pass').value = Math.floor(100000 + Math.random() * 900000);
-        }
-        
-        async function saveStaff() {
-            const name = document.getElementById('s-name').value.trim();
-            const phone = document.getElementById('s-phone').value.trim();
-            const password = document.getElementById('s-pass').value;
-            const shift = document.getElementById('s-shift').value;
-            const isActive = document.getElementById('s-active').value === 'true';
-            const btn = document.getElementById('save-staff-btn');
-            
-            if (!name) {
-                showToast('الرجاء إدخال الاسم', 'error');
-                return;
-            }
-            
-            if (!validatePhone(phone)) {
-                showToast('رقم الهاتف غير صحيح', 'error');
-                return;
-            }
-            
-            if (!password) {
-                showToast('الرجاء إدخال كلمة المرور', 'error');
-                return;
-            }
-            
-            if (!shift) {
-                showToast('الرجاء اختيار الوردية', 'error');
-                return;
-            }
-            
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>جاري الحفظ...</span>';
-            btn.disabled = true;
-            
-            try {
-                const staffData = {
-                    full_name: name,
-                    phone_number: phone,
-                    password: password,
-                    shift_type: shift,
-                    role: 'supervisor',
-                    is_active: isActive,
-                    created_at: new Date().toISOString()
-                };
-                
-                const { data, error } = await supabaseClient
-                    .from('employees')
-                    .insert([staffData])
-                    .select()
-                    .single();
-                
-                if (error) {
-                    if (error.code === '23505') {
-                        throw new Error('رقم الهاتف مسجل مسبقاً');
-                    }
-                    throw error;
-                }
-                
-                showToast('تم إضافة المشرف بنجاح', 'success');
-                closeModal('staff-modal');
-                loadStaff();
-                
-            } catch (error) {
-                showToast(error.message || 'حدث خطأ في الإضافة', 'error');
-            } finally {
-                btn.innerHTML = '<i class="fas fa-save"></i><span>حفظ المشرف</span>';
-                btn.disabled = false;
-            }
-        }
-        
-        async function openEditStaff(staffId) {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('employees')
-                    .select('*')
-                    .eq('id', staffId)
-                    .single();
-                
-                if (error) throw error;
-                
-                if (data) {
-                    State.currentStaffId = staffId;
-                    document.getElementById('edit-staff-id').value = staffId;
-                    document.getElementById('edit-s-name').value = data.full_name;
-                    document.getElementById('edit-s-phone').value = data.phone_number;
-                    document.getElementById('edit-s-shift').value = data.shift_type || '';
-                    document.getElementById('edit-s-active').value = data.is_active;
-                    openModal('edit-staff-modal');
-                }
-                
-            } catch (error) {
-                showToast('حدث خطأ في تحميل البيانات', 'error');
-            }
-        }
-        
-        async function updateStaff() {
-            const id = document.getElementById('edit-staff-id').value;
-            const name = document.getElementById('edit-s-name').value.trim();
-            const phone = document.getElementById('edit-s-phone').value.trim();
-            const password = document.getElementById('edit-s-pass').value;
-            const shift = document.getElementById('edit-s-shift').value;
-            const isActive = document.getElementById('edit-s-active').value === 'true';
-            
-            if (!name) {
-                showToast('الرجاء إدخال الاسم', 'error');
-                return;
-            }
-            
-            if (!validatePhone(phone)) {
-                showToast('رقم الهاتف غير صحيح', 'error');
-                return;
-            }
-            
-            if (!shift) {
-                showToast('الرجاء اختيار الوردية', 'error');
-                return;
-            }
-            
-            const updateData = {
-                full_name: name,
-                phone_number: phone,
-                shift_type: shift,
-                is_active: isActive
-            };
-            
-            if (password) {
-                if (password.length !== 6) {
-                    showToast('كلمة المرور يجب أن تكون 6 أرقام', 'error');
-                    return;
-                }
-                updateData.password = password;
-            }
-            
-            try {
-                const { error } = await supabaseClient
-                    .from('employees')
-                    .update(updateData)
-                    .eq('id', id);
-                
-                if (error) throw error;
-                
-                showToast('تم تحديث البيانات بنجاح', 'success');
-                closeModal('edit-staff-modal');
-                loadStaff();
-                
-            } catch (error) {
-                showToast('حدث خطأ في التحديث', 'error');
-            }
-        }
-        
-        async function deleteStaff(id, name) {
-            if (!confirm(`هل تريد حذف المشرف ${name}؟`)) return;
-            
-            try {
-                const { error } = await supabaseClient
-                    .from('employees')
-                    .delete()
-                    .eq('id', id);
-                
-                if (error) throw error;
-                
-                showToast('تم حذف المشرف بنجاح', 'success');
-                loadStaff();
-                
-            } catch (error) {
-                showToast('حدث خطأ في الحذف', 'error');
-            }
-        }
-        
-        function setDefaultDates() {
-            const today = new Date();
-            const lastWeek = new Date(today);
-            lastWeek.setDate(today.getDate() - 7);
-            
-            document.getElementById('history-from').value = lastWeek.toISOString().split('T')[0];
-            document.getElementById('history-to').value = today.toISOString().split('T')[0];
-        }
-        
-        async function loadHistoricalReports() {
-            const fromDate = document.getElementById('history-from').value;
-            const toDate = document.getElementById('history-to').value;
-            
-            if (!fromDate || !toDate) {
-                showToast('الرجاء اختيار تاريخ البداية والنهاية', 'error');
-                return;
-            }
-            
-            try {
-                const { data, error } = await supabaseClient
-                    .from('shift_reports')
-                    .select(`
-                        *,
-                        employees (
-                            full_name,
-                            phone_number
-                        )
-                    `)
-                    .gte('created_at', fromDate)
-                    .lte('created_at', toDate + 'T23:59:59')
-                    .order('created_at', { ascending: false });
-                
-                if (error) throw error;
-                
-                const container = document.getElementById('historical-reports-container');
-                
-                if (!data || data.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-clipboard"></i>
-                            <h3>لا توجد تقارير في الفترة المحددة</h3>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                container.innerHTML = data.map(report => `
-                    <div class="list-item">
-                        <div class="list-item-content">
-                            <div class="list-item-title">${report.employees?.full_name || 'مشرف'}</div>
-                            <div class="list-item-subtitle">
-                                <span class="badge-primary">${report.shift_name}</span>
-                                <span>•</span>
-                                <span>${new Date(report.created_at).toLocaleDateString('ar-YE')}</span>
-                            </div>
-                            <div style="display: flex; gap: 15px; margin-top: 8px;">
-                                <span style="color: var(--primary); font-weight: 700;">
-                                    <i class="fas fa-boxes"></i> ${report.qty} وحدة
-                                </span>
-                                <span style="color: var(--success); font-weight: 700;">
-                                    <i class="fas fa-weight-hanging"></i> ${report.weight} كجم
-                                </span>
-                            </div>
-                            ${report.notes ? `<div style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">${report.notes}</div>` : ''}
-                        </div>
-                    </div>
-                `).join('');
-                
-            } catch (error) {
-                showToast('حدث خطأ في تحميل التقارير', 'error');
-            }
-        }
-        
-        async function loadAdminNotifications() {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('notifications')
-                    .select('*')
-                    .order('created_at', { ascending: false })
-                    .limit(20);
-                
-                if (error) throw error;
-                
-                const container = document.getElementById('admin-notifications-list');
-                
-                if (!data || data.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fas fa-bell"></i>
-                            <h3>لا توجد إشعارات</h3>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                container.innerHTML = data.map(notification => `
-                    <div class="list-item">
-                        <div class="list-item-content">
-                            <div class="list-item-title">${notification.title}</div>
-                            <div class="list-item-subtitle">
-                                <span>${notification.message}</span>
-                            </div>
-                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">
-                                <i class="fas fa-clock"></i> ${new Date(notification.created_at).toLocaleString('ar-YE')}
-                                ${notification.receiver_id ? '<span style="margin-right: 10px;">• <i class="fas fa-user"></i> إشعار فردي</span>' : '<span style="margin-right: 10px;">• <i class="fas fa-users"></i> إشعار جماعي</span>'}
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-                
-            } catch (error) {
-                console.error('Error loading notifications:', error);
-            }
-        }
-        
-        function openNotificationModal() {
-            loadSupervisorsForNotification();
-            openModal('notification-modal');
-        }
-        
-        async function loadSupervisorsForNotification() {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('employees')
-                    .select('id, full_name')
-                    .eq('role', 'supervisor')
-                    .eq('is_active', true);
-                
-                if (error) throw error;
-                
-                const select = document.getElementById('notification-receiver');
-                select.innerHTML = '<option value="">اختر المشرف</option>';
-                
-                if (data) {
-                    data.forEach(supervisor => {
-                        select.innerHTML += `<option value="${supervisor.id}">${supervisor.full_name}</option>`;
-                    });
-                }
-                
-            } catch (error) {
-                console.error('Error loading supervisors:', error);
-            }
-        }
-        
-        function toggleReceiverSelect() {
-            const type = document.getElementById('notification-type').value;
-            const receiverSelect = document.getElementById('receiver-select');
-            receiverSelect.style.display = type === 'specific' ? 'block' : 'none';
-        }
-        
-        async function sendNotification() {
-            const type = document.getElementById('notification-type').value;
-            const receiverId = type === 'specific' ? document.getElementById('notification-receiver').value : null;
-            const message = document.getElementById('notification-message').value.trim();
-            
-            if (!message) {
-                showToast('الرجاء كتابة نص الإشعار', 'error');
-                return;
-            }
-            
-            if (type === 'specific' && !receiverId) {
-                showToast('الرجاء اختيار مشرف', 'error');
-                return;
-            }
-            
-            try {
-                // إضافة اسم المدير الحالي إلى عنوان الإشعار
-                const managerName = State.currentUser?.full_name || 'المدير';
-                const notificationTitle = `إشعار من المدير ${managerName}`;
-                
-                const notificationData = {
-                    title: notificationTitle,
-                    message: message,
-                    receiver_id: receiverId,
-                    sender_id: State.currentUser.id,
-                    sender_name: managerName,
-                    created_at: new Date().toISOString()
-                };
-                
-                const { error } = await supabaseClient
-                    .from('notifications')
-                    .insert([notificationData]);
-                
-                if (error) throw error;
-                
-                showToast('تم إرسال الإشعار بنجاح', 'success');
-                closeModal('notification-modal');
-                
-            } catch (error) {
-                showToast('حدث خطأ في إرسال الإشعار', 'error');
-            }
-        }
-        
-        function loadProfile() {
-            if (State.currentUser) {
-                document.getElementById('profile-name').value = State.currentUser.full_name;
-                document.getElementById('profile-phone').value = State.currentUser.phone_number;
-                document.getElementById('profile-password').value = State.currentUser.password;
-                document.getElementById('profile-role').value = State.currentUser.role === 'admin' ? 'مدير النظام' : 'مشرف إنتاج';
-            }
-        }
-        
-        function openEditProfileModal() {
-            if (State.currentUser) {
-                document.getElementById('edit-profile-name').value = State.currentUser.full_name;
-                document.getElementById('edit-profile-phone').value = State.currentUser.phone_number;
-                openModal('edit-profile-modal');
-            }
-        }
-        
-        async function updateProfile() {
-            const name = document.getElementById('edit-profile-name').value.trim();
-            const phone = document.getElementById('edit-profile-phone').value.trim();
-            const password = document.getElementById('edit-profile-pass').value;
-            
-            if (!name) {
-                showToast('الرجاء إدخال الاسم', 'error');
-                return;
-            }
-            
-            if (!validatePhone(phone)) {
-                showToast('رقم الهاتف غير صحيح', 'error');
-                return;
-            }
-            
-            const updateData = {
-                full_name: name,
-                phone_number: phone
-            };
-            
-            if (password) {
-                if (password.length !== 6) {
-                    showToast('كلمة المرور يجب أن تكون 6 أرقام', 'error');
-                    return;
-                }
-                updateData.password = password;
-            }
-            
-            try {
-                const { error } = await supabaseClient
-                    .from('employees')
-                    .update(updateData)
-                    .eq('id', State.currentUser.id);
-                
-                if (error) throw error;
-                
-                State.currentUser.full_name = name;
-                State.currentUser.phone_number = phone;
-                if (password) State.currentUser.password = password;
-                
-                localStorage.setItem('fac_session_2026', JSON.stringify(State.currentUser));
-                State.updateUserInfo();
-                
-                showToast('تم تحديث بيانات الحساب بنجاح', 'success');
-                closeModal('edit-profile-modal');
-                loadProfile();
-                
-            } catch (error) {
-                showToast('حدث خطأ في التحديث', 'error');
-            }
-        }
-        
-        function showNotifications() {
-            if (State.currentUser.role === 'admin') {
-                switchTab('notifications');
-            } else {
-                loadSupervisorNotifications();
-            }
-        }
-
-        // ============ دوال مساعدة ============
-        function openModal(modalId) {
-            document.getElementById(modalId).style.display = 'flex';
-        }
-        
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-        
-        function showToast(message, type = 'info') {
-            Toastify({
-                text: message,
-                duration: 3000,
-                gravity: "top",
-                position: "center",
-                style: {
-                    background: type === 'success' ? '#10b981' : 
-                              type === 'error' ? '#ef4444' : '#2563eb',
-                    borderRadius: '12px',
-                    fontFamily: 'Cairo',
-                    fontWeight: '600'
-                }
-            }).showToast();
-        }
-
-        // ============ تهيئة التطبيق ============
-        document.addEventListener('DOMContentLoaded', () => {
-            // إعداد نموذج التقرير للمشرف
-            const reportForm = document.getElementById('report-form');
-            if (reportForm) {
-                reportForm.addEventListener('submit', submitReport);
-            }
-            
-            // التحقق من الجلسة السابقة
-            const savedSession = localStorage.getItem('fac_session_2026');
-            if (savedSession) {
-                try {
-                    const user = JSON.parse(savedSession);
-                    State.setUser(user);
-                    redirectToDashboard();
-                } catch (error) {
-                    localStorage.removeItem('fac_session_2026');
-                }
-            }
-            
-            // تعيين التواريخ الافتراضية
-            if (document.getElementById('history-from')) {
-                setDefaultDates();
-            }
-            
-            // إضافة event listener للجسم لمنع التكبير على الهاتف
-            document.body.addEventListener('touchstart', function(e) {
-                if (e.touches.length > 1) {
-                    e.preventDefault();
-                }
-            }, { passive: false });
-            
-            let lastTouchEnd = 0;
-            document.body.addEventListener('touchend', function(e) {
-                const now = (new Date()).getTime();
-                if (now - lastTouchEnd <= 300) {
-                    e.preventDefault();
-                }
-                lastTouchEnd = now;
-            }, false);
-        });
-    </script>
-</body>
+        
+        function clearForm() {
+            document.getElementById('report-form').reset();
+            // الحفاظ على قيمة الوردية
+            if (State.currentUser && State.currentUser.shift_type) {
+                document.getElementById('shift-type').value = State.currentUser.shift_type;
+            }
+        }
+        
+        async function loadSupervisorNotifications() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('notifications')
+                    .select('*')
+                    .or(`receiver_id.eq.${State.currentUser.id},receiver_id.is.null`)
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+                
+                if (error) throw error;
+                
+                const container = document.getElementById('supervisor-notifications-list');
+                
+                if (!data || data.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-bell-slash"></i>
+                            <h3>لا توجد إشعارات</h3>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = data.map(notification => `
+                    <div class="list-item notification-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">${notification.title}</div>
+                            <div class="list-item-subtitle">
+                                <span>${notification.message}</span>
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">
+                                <i class="fas fa-clock"></i> ${new Date(notification.created_at).toLocaleString('ar-YE')}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+            }
+        }
+
+        // ============ دوال المدير ============
+        function switchTab(tab) {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            document.getElementById('admin-dash').classList.add('hidden');
+            document.getElementById('admin-staff').classList.add('hidden');
+            document.getElementById('admin-history').classList.add('hidden');
+            document.getElementById('admin-notifications').classList.add('hidden');
+            document.getElementById('admin-profile').classList.add('hidden');
+            
+            document.getElementById(`nav-${tab}`).classList.add('active');
+            document.getElementById(`admin-${tab}`).classList.remove('hidden');
+            
+            switch(tab) {
+                case 'dash':
+                    loadDashboardStats();
+                    break;
+                case 'staff':
+                    loadStaff();
+                    break;
+                case 'history':
+                    setDefaultDates();
+                    break;
+                case 'notifications':
+                    loadAdminNotifications();
+                    break;
+                case 'profile':
+                    loadProfile();
+                    break;
+            }
+        }
+        
+        async function loadDashboardStats() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                
+                const { data: reports } = await supabaseClient
+                    .from('shift_reports')
+                    .select('qty, weight')
+                    .gte('created_at', today);
+                
+                const { data: supervisors } = await supabaseClient
+                    .from('employees')
+                    .select('id')
+                    .eq('role', 'supervisor')
+                    .eq('is_active', true);
+                
+                const totalQty = reports?.reduce((sum, r) => sum + (r.qty || 0), 0) || 0;
+                const totalWeight = reports?.reduce((sum, r) => sum + (r.weight || 0), 0) || 0;
+                
+                document.getElementById('stat-today-qty').textContent = totalQty;
+                document.getElementById('stat-today-weight').textContent = totalWeight.toFixed(1);
+                document.getElementById('stat-active-supervisors').textContent = supervisors?.length || 0;
+                document.getElementById('stat-total-reports').textContent = reports?.length || 0;
+                
+                await loadReports();
+                
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+        
+        async function loadReports() {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                
+                const { data, error } = await supabaseClient
+                    .from('shift_reports')
+                    .select(`
+                        *,
+                        employees (
+                            full_name,
+                            phone_number
+                        )
+                    `)
+                    .gte('created_at', today)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                const container = document.getElementById('reports-list-container');
+                
+                if (!data || data.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-clipboard"></i>
+                            <h3>لا توجد تقارير اليوم</h3>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = data.map(report => `
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">${report.employees?.full_name || 'مشرف'}</div>
+                            <div class="list-item-subtitle">
+                                <span class="badge-primary">${report.shift_name}</span>
+                                <span>•</span>
+                                <span><i class="fas fa-clock"></i> ${new Date(report.created_at).toLocaleTimeString('ar-YE', { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                            <div style="display: flex; gap: 15px; margin-top: 8px;">
+                                <span style="color: var(--primary); font-weight: 700;">
+                                    <i class="fas fa-boxes"></i> ${report.qty} وحدة
+                                </span>
+                                <span style="color: var(--success); font-weight: 700;">
+                                    <i class="fas fa-weight-hanging"></i> ${report.weight} كجم
+                                </span>
+                            </div>
+                            ${report.notes ? `<div style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">${report.notes}</div>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading reports:', error);
+            }
+        }
+        
+        async function loadStaff() {
+    try {
+        const { data, error } = await supabaseClient
+            .from('employees')
+            .select('*')
+            .eq('role', 'supervisor')
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        const container = document.getElementById('staff-list-container');
+        
+        if (!data || data.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-users"></i>
+                    <h3>لا توجد مشرفين</h3>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = data.map(staff => `
+            <div class="list-item">
+                <div class="list-item-content">
+                    <div class="list-item-title">${staff.full_name}</div>
+                    <div class="list-item-subtitle">
+                        <span><i class="fas fa-phone"></i> ${staff.phone_number}</span>
+                        <span>•</span>
+                        <span><i class="fas fa-key"></i> ${staff.password}</span>
+                        <span>•</span>
+                        <span class="badge ${staff.is_active ? 'badge-success' : 'badge-warning'}">
+                            ${staff.is_active ? 'نشط' : 'معطل'}
+                        </span>
+                    </div>
+                </div>
+                <div class="list-item-actions">
+                    <button class="action-btn" onclick="openEditStaff('${staff.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn" style="background: rgba(239, 68, 68, 0.1); color: var(--danger);" 
+                            onclick="deleteStaff('${staff.id}', '${staff.full_name}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error loading staff:', error);
+    }
+}
+
+        function generatePassword() {
+            document.getElementById('s-pass').value = Math.floor(100000 + Math.random() * 900000);
+        }
+        
+        async function saveStaff() {
+            const name = document.getElementById('s-name').value.trim();
+            const phone = document.getElementById('s-phone').value.trim();
+            const password = document.getElementById('s-pass').value;
+            const shift = document.getElementById('s-shift').value;
+            const isActive = document.getElementById('s-active').value === 'true';
+            const btn = document.getElementById('save-staff-btn');
+            
+            if (!name) {
+                showToast('الرجاء إدخال الاسم', 'error');
+                return;
+            }
+            
+            if (!validatePhone(phone)) {
+                showToast('رقم الهاتف غير صحيح', 'error');
+                return;
+            }
+            
+            if (!password) {
+                showToast('الرجاء إدخال كلمة المرور', 'error');
+                return;
+            }
+            
+            if (!shift) {
+                showToast('الرجاء اختيار الوردية', 'error');
+                return;
+            }
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>جاري الحفظ...</span>';
+            btn.disabled = true;
+            
+            try {
+                const staffData = {
+                    full_name: name,
+                    phone_number: phone,
+                    password: password,
+                    shift_type: shift,
+                    role: 'supervisor',
+                    is_active: isActive,
+                    created_at: new Date().toISOString()
+                };
+                
+                const { data, error } = await supabaseClient
+                    .from('employees')
+                    .insert([staffData])
+                    .select()
+                    .single();
+                
+                if (error) {
+                    if (error.code === '23505') {
+                        throw new Error('رقم الهاتف مسجل مسبقاً');
+                    }
+                    throw error;
+                }
+                
+                showToast('تم إضافة المشرف بنجاح', 'success');
+                closeModal('staff-modal');
+                loadStaff();
+                
+            } catch (error) {
+                showToast(error.message || 'حدث خطأ في الإضافة', 'error');
+            } finally {
+                btn.innerHTML = '<i class="fas fa-save"></i><span>حفظ المشرف</span>';
+                btn.disabled = false;
+            }
+        }
+        
+        async function openEditStaff(staffId) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('employees')
+                    .select('*')
+                    .eq('id', staffId)
+                    .single();
+                
+                if (error) throw error;
+                
+                if (data) {
+                    State.currentStaffId = staffId;
+                    document.getElementById('edit-staff-id').value = staffId;
+                    document.getElementById('edit-s-name').value = data.full_name;
+                    document.getElementById('edit-s-phone').value = data.phone_number;
+                    document.getElementById('edit-s-shift').value = data.shift_type || '';
+                    document.getElementById('edit-s-active').value = data.is_active;
+                    openModal('edit-staff-modal');
+                }
+                
+            } catch (error) {
+                showToast('حدث خطأ في تحميل البيانات', 'error');
+            }
+        }
+        
+        async function updateStaff() {
+            const id = document.getElementById('edit-staff-id').value;
+            const name = document.getElementById('edit-s-name').value.trim();
+            const phone = document.getElementById('edit-s-phone').value.trim();
+            const password = document.getElementById('edit-s-pass').value;
+            const shift = document.getElementById('edit-s-shift').value;
+            const isActive = document.getElementById('edit-s-active').value === 'true';
+            
+            if (!name) {
+                showToast('الرجاء إدخال الاسم', 'error');
+                return;
+            }
+            
+            if (!validatePhone(phone)) {
+                showToast('رقم الهاتف غير صحيح', 'error');
+                return;
+            }
+            
+            if (!shift) {
+                showToast('الرجاء اختيار الوردية', 'error');
+                return;
+            }
+            
+            const updateData = {
+                full_name: name,
+                phone_number: phone,
+                shift_type: shift,
+                is_active: isActive
+            };
+            
+            if (password) {
+                if (password.length !== 6) {
+                    showToast('كلمة المرور يجب أن تكون 6 أرقام', 'error');
+                    return;
+                }
+                updateData.password = password;
+            }
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('employees')
+                    .update(updateData)
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                showToast('تم تحديث البيانات بنجاح', 'success');
+                closeModal('edit-staff-modal');
+                loadStaff();
+                
+            } catch (error) {
+                showToast('حدث خطأ في التحديث', 'error');
+            }
+        }
+        
+        async function deleteStaff(id, name) {
+            if (!confirm(`هل تريد حذف المشرف ${name}؟`)) return;
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('employees')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                showToast('تم حذف المشرف بنجاح', 'success');
+                loadStaff();
+                
+            } catch (error) {
+                showToast('حدث خطأ في الحذف', 'error');
+            }
+        }
+        
+        function setDefaultDates() {
+            const today = new Date();
+            const lastWeek = new Date(today);
+            lastWeek.setDate(today.getDate() - 7);
+            
+            document.getElementById('history-from').value = lastWeek.toISOString().split('T')[0];
+            document.getElementById('history-to').value = today.toISOString().split('T')[0];
+        }
+        
+        async function loadHistoricalReports() {
+            const fromDate = document.getElementById('history-from').value;
+            const toDate = document.getElementById('history-to').value;
+            
+            if (!fromDate || !toDate) {
+                showToast('الرجاء اختيار تاريخ البداية والنهاية', 'error');
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('shift_reports')
+                    .select(`
+                        *,
+                        employees (
+                            full_name,
+                            phone_number
+                        )
+                    `)
+                    .gte('created_at', fromDate)
+                    .lte('created_at', toDate + 'T23:59:59')
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                const container = document.getElementById('historical-reports-container');
+                
+                if (!data || data.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-clipboard"></i>
+                            <h3>لا توجد تقارير في الفترة المحددة</h3>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = data.map(report => `
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">${report.employees?.full_name || 'مشرف'}</div>
+                            <div class="list-item-subtitle">
+                                <span class="badge-primary">${report.shift_name}</span>
+                                <span>•</span>
+                                <span>${new Date(report.created_at).toLocaleDateString('ar-YE')}</span>
+                            </div>
+                            <div style="display: flex; gap: 15px; margin-top: 8px;">
+                                <span style="color: var(--primary); font-weight: 700;">
+                                    <i class="fas fa-boxes"></i> ${report.qty} وحدة
+                                </span>
+                                <span style="color: var(--success); font-weight: 700;">
+                                    <i class="fas fa-weight-hanging"></i> ${report.weight} كجم
+                                </span>
+                            </div>
+                            ${report.notes ? `<div style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">${report.notes}</div>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                showToast('حدث خطأ في تحميل التقارير', 'error');
+            }
+        }
+        
+        async function loadAdminNotifications() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('notifications')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+                
+                if (error) throw error;
+                
+                const container = document.getElementById('admin-notifications-list');
+                
+                if (!data || data.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-bell"></i>
+                            <h3>لا توجد إشعارات</h3>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = data.map(notification => `
+                    <div class="list-item">
+                        <div class="list-item-content">
+                            <div class="list-item-title">${notification.title}</div>
+                            <div class="list-item-subtitle">
+                                <span>${notification.message}</span>
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">
+                                <i class="fas fa-clock"></i> ${new Date(notification.created_at).toLocaleString('ar-YE')}
+                                ${notification.receiver_id ? '<span style="margin-right: 10px;">• <i class="fas fa-user"></i> إشعار فردي</span>' : '<span style="margin-right: 10px;">• <i class="fas fa-users"></i> إشعار جماعي</span>'}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+            }
+        }
+        
+        function openNotificationModal() {
+            loadSupervisorsForNotification();
+            openModal('notification-modal');
+        }
+        
+        async function loadSupervisorsForNotification() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('employees')
+                    .select('id, full_name')
+                    .eq('role', 'supervisor')
+                    .eq('is_active', true);
+                
+                if (error) throw error;
+                
+                const select = document.getElementById('notification-receiver');
+                select.innerHTML = '<option value="">اختر المشرف</option>';
+                
+                if (data) {
+                    data.forEach(supervisor => {
+                        select.innerHTML += `<option value="${supervisor.id}">${supervisor.full_name}</option>`;
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error loading supervisors:', error);
+            }
+        }
+        
+        function toggleReceiverSelect() {
+            const type = document.getElementById('notification-type').value;
+            const receiverSelect = document.getElementById('receiver-select');
+            receiverSelect.style.display = type === 'specific' ? 'block' : 'none';
+        }
+        
+        async function sendNotification() {
+            const type = document.getElementById('notification-type').value;
+            const receiverId = type === 'specific' ? document.getElementById('notification-receiver').value : null;
+            const message = document.getElementById('notification-message').value.trim();
+            
+            if (!message) {
+                showToast('الرجاء كتابة نص الإشعار', 'error');
+                return;
+            }
+            
+            if (type === 'specific' && !receiverId) {
+                showToast('الرجاء اختيار مشرف', 'error');
+                return;
+            }
+            
+            try {
+                // إضافة اسم المدير الحالي إلى عنوان الإشعار
+                const managerName = State.currentUser?.full_name || 'المدير';
+                const notificationTitle = `إشعار من المدير ${managerName}`;
+                
+                const notificationData = {
+                    title: notificationTitle,
+                    message: message,
+                    receiver_id: receiverId,
+                    sender_id: State.currentUser.id,
+                    sender_name: managerName,
+                    created_at: new Date().toISOString()
+                };
+                
+                const { error } = await supabaseClient
+                    .from('notifications')
+                    .insert([notificationData]);
+                
+                if (error) throw error;
+                
+                showToast('تم إرسال الإشعار بنجاح', 'success');
+                closeModal('notification-modal');
+                
+            } catch (error) {
+                showToast('حدث خطأ في إرسال الإشعار', 'error');
+            }
+        }
+        
+        function loadProfile() {
+            if (State.currentUser) {
+                document.getElementById('profile-name').value = State.currentUser.full_name;
+                document.getElementById('profile-phone').value = State.currentUser.phone_number;
+                document.getElementById('profile-password').value = State.currentUser.password;
+                document.getElementById('profile-role').value = State.currentUser.role === 'admin' ? 'مدير النظام' : 'مشرف إنتاج';
+            }
+        }
+        
+        function openEditProfileModal() {
+            if (State.currentUser) {
+                document.getElementById('edit-profile-name').value = State.currentUser.full_name;
+                document.getElementById('edit-profile-phone').value = State.currentUser.phone_number;
+                openModal('edit-profile-modal');
+            }
+        }
+        
+        async function updateProfile() {
+            const name = document.getElementById('edit-profile-name').value.trim();
+            const phone = document.getElementById('edit-profile-phone').value.trim();
+            const password = document.getElementById('edit-profile-pass').value;
+            
+            if (!name) {
+                showToast('الرجاء إدخال الاسم', 'error');
+                return;
+            }
+            
+            if (!validatePhone(phone)) {
+                showToast('رقم الهاتف غير صحيح', 'error');
+                return;
+            }
+            
+            const updateData = {
+                full_name: name,
+                phone_number: phone
+            };
+            
+            if (password) {
+                if (password.length !== 6) {
+                    showToast('كلمة المرور يجب أن تكون 6 أرقام', 'error');
+                    return;
+                }
+                updateData.password = password;
+            }
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('employees')
+                    .update(updateData)
+                    .eq('id', State.currentUser.id);
+                
+                if (error) throw error;
+                
+                State.currentUser.full_name = name;
+                State.currentUser.phone_number = phone;
+                if (password) State.currentUser.password = password;
+                
+                localStorage.setItem('fac_session_2026', JSON.stringify(State.currentUser));
+                State.updateUserInfo();
+                
+                showToast('تم تحديث بيانات الحساب بنجاح', 'success');
+                closeModal('edit-profile-modal');
+                loadProfile();
+                
+            } catch (error) {
+                showToast('حدث خطأ في التحديث', 'error');
+            }
+        }
+        
+        function showNotifications() {
+            if (State.currentUser.role === 'admin') {
+                switchTab('notifications');
+            } else {
+                loadSupervisorNotifications();
+            }
+        }
+
+        // ============ دوال مساعدة ============
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        function showToast(message, type = 'info') {
+            Toastify({
+                text: message,
+                duration: 3000,
+                gravity: "top",
+                position: "center",
+                style: {
+                    background: type === 'success' ? '#10b981' : 
+                              type === 'error' ? '#ef4444' : '#2563eb',
+                    borderRadius: '12px',
+                    fontFamily: 'Cairo',
+                    fontWeight: '600'
+                }
+            }).showToast();
+        }
+
+        // ============ تهيئة التطبيق ============
+        document.addEventListener('DOMContentLoaded', () => {
+            // إعداد نموذج التقرير للمشرف
+            const reportForm = document.getElementById('report-form');
+            if (reportForm) {
+                reportForm.addEventListener('submit', submitReport);
+            }
+            
+            // التحقق من الجلسة السابقة
+            const savedSession = localStorage.getItem('fac_session_2026');
+            if (savedSession) {
+                try {
+                    const user = JSON.parse(savedSession);
+                    State.setUser(user);
+                    redirectToDashboard();
+                } catch (error) {
+                    localStorage.removeItem('fac_session_2026');
+                }
+            }
+            
+            // تعيين التواريخ الافتراضية
+            if (document.getElementById('history-from')) {
+                setDefaultDates();
+            }
+            
+            // إضافة event listener للجسم لمنع التكبير على الهاتف
+            document.body.addEventListener('touchstart', function(e) {
+                if (e.touches.length > 1) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            let lastTouchEnd = 0;
+            document.body.addEventListener('touchend', function(e) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    e.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+        });
+    </script>
+</body>
 </html>
