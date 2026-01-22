@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <title>مشاركة المنتج | ابن المختار للأدوات المنزلية</title>
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="product" />
+    <meta property="og:url" content="" id="ogUrl" />
+    <meta property="og:title" content="" id="ogTitle" />
+    <meta property="og:description" content="" id="ogDescription" />
+    <meta property="og:image" content="" id="ogImage" />
+    <meta property="og:site_name" content="ابن المختار للأدوات المنزلية" />
+    <meta property="og:locale" content="ar_AR" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="" id="twitterTitle" />
+    <meta name="twitter:description" content="" id="twitterDescription" />
+    <meta name="twitter:image" content="" id="twitterImage" />
+    <meta name="twitter:site" content="@ابن المختار" />
+    
+    <!-- Additional Meta Tags for Better Display -->
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="" id="ogImageAlt" />
+    
+    <!-- WhatsApp Specific -->
+    <meta property="og:image" content="" id="ogImageWhatsApp" />
+    
+    <!-- Redirect to product page after 1 second -->
+    <meta http-equiv="refresh" content="1; url=product.html" id="redirectMeta" />
+    
+    <style>
+        :root {
+            --main-color: #0f172a;
+            --secondary-color: #D4AF37;
+            --bg-color: #fafaf9;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--main-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            border: 2px solid var(--secondary-color);
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--secondary-color);
+            margin-bottom: 30px;
+            text-shadow: 0 2px 10px rgba(212, 175, 55, 0.3);
+        }
+        
+        .product-preview {
+            margin: 30px 0;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .product-preview img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .product-info {
+            margin: 25px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #fffcf5 0%, #fff 100%);
+            border-radius: 15px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+        
+        .product-name {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--main-color);
+            margin-bottom: 15px;
+        }
+        
+        .product-description {
+            font-size: 16px;
+            color: #444;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--secondary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        .redirect-message {
+            margin-top: 30px;
+            font-size: 16px;
+            color: #666;
+            padding: 15px;
+            background: rgba(212, 175, 55, 0.1);
+            border-radius: 10px;
+            border: 1px dashed var(--secondary-color);
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px 20px;
+            }
+            
+            .product-name {
+                font-size: 20px;
+            }
+        }
+        
+        /* Hide the page content from social media bots (they only read meta tags) */
+        .social-bot-only {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🌙 ابن المختار للأدوات المنزلية</div>
+        
+        <div class="loading" id="loadingSection">
+            <div class="spinner"></div>
+            <div class="product-name">جاري تحميل معلومات المنتج...</div>
+            <div class="product-description">يرجى الانتظار قليلاً، سيتم تحويلك تلقائياً إلى صفحة المنتج.</div>
+        </div>
+        
+        <div id="productPreview" style="display: none;">
+            <div class="product-preview">
+                <img id="productImage" src="" alt="صورة المنتج" />
+            </div>
+            <div class="product-info">
+                <div class="product-name" id="productName"></div>
+                <div class="product-description" id="productDescription"></div>
+            </div>
+        </div>
+        
+        <div class="redirect-message">
+            <p>🚀 يتم تحويلك إلى صفحة المنتج خلال ثانية واحدة...</p>
+            <p>إذا لم يتم التحويل تلقائياً، <a href="#" id="manualRedirectLink">انقر هنا</a></p>
+        </div>
+    </div>
+    
+    <!-- Content that will be visible only to social media bots (they don't execute JS) -->
+    <div class="social-bot-only">
+        <h1 id="botProductName"></h1>
+        <p id="botProductDescription"></p>
+        <img id="botProductImage" src="" alt="" />
+    </div>
+
+    <script>
+        // Supabase Configuration
+        const DB_URL = 'https://mpcuradmirhcfmwvsylt.supabase.co';
+        const DB_KEY = 'sb_publishable_MJRUl3ON-d61CnFsJ-pFJA_Nbbpg_gZ';
+        
+        // Get product ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+        
+        // Default fallback data
+        const defaultData = {
+            name: 'منتج من ابن المختار للأدوات المنزلية',
+            description: 'أفضل الأدوات المنزلية بجودة عالية وسعر مميز',
+            image: 'https://via.placeholder.com/1200x630/0f172a/D4AF37?text=ابن+المختار+للأدوات+المنزلية'
+        };
+        
+        // Function to update meta tags for social media
+        function updateMetaTags(product) {
+            const productName = product.name || defaultData.name;
+            const productDescription = product.description || defaultData.description;
+            let productImage = Array.isArray(product.image) ? product.image[0] : product.image;
+            
+            // Use default image if no product image
+            if (!productImage || productImage.trim() === '') {
+                productImage = defaultData.image;
+            }
+            
+            // Current page URL
+            const currentUrl = window.location.href;
+            // Product page URL (where we redirect to)
+            const productPageUrl = productId ? `product.html?id=${productId}` : 'product.html';
+            
+            // Update Open Graph tags
+            document.getElementById('ogUrl').content = currentUrl;
+            document.getElementById('ogTitle').content = productName;
+            document.getElementById('ogDescription').content = productDescription.substring(0, 200);
+            document.getElementById('ogImage').content = productImage;
+            document.getElementById('ogImageAlt').content = productName;
+            
+            // Update Twitter tags
+            document.getElementById('twitterTitle').content = productName;
+            document.getElementById('twitterDescription').content = productDescription.substring(0, 200);
+            document.getElementById('twitterImage').content = productImage;
+            
+            // Update WhatsApp-specific image tag
+            document.getElementById('ogImageWhatsApp').content = productImage;
+            
+            // Update redirect meta tag
+            document.getElementById('redirectMeta').content = `1; url=${productPageUrl}`;
+            
+            // Update page title
+            document.title = `${productName} | ابن المختار`;
+            
+            // Update content for social media bots (they don't execute JS)
+            document.getElementById('botProductName').textContent = productName;
+            document.getElementById('botProductDescription').textContent = productDescription;
+            document.getElementById('botProductImage').src = productImage;
+            document.getElementById('botProductImage').alt = productName;
+            
+            return product;
+        }
+        
+        // Function to display product preview for users
+        function displayProductPreview(product) {
+            const productName = product.name || defaultData.name;
+            const productDescription = product.description || defaultData.description;
+            let productImage = Array.isArray(product.image) ? product.image[0] : product.image;
+            
+            if (!productImage || productImage.trim() === '') {
+                productImage = defaultData.image;
+            }
+            
+            // Show product preview
+            document.getElementById('loadingSection').style.display = 'none';
+            document.getElementById('productPreview').style.display = 'block';
+            
+            // Update product info
+            document.getElementById('productName').textContent = productName;
+            document.getElementById('productDescription').textContent = productDescription;
+            document.getElementById('productImage').src = productImage;
+            
+            // Update manual redirect link
+            const productPageUrl = productId ? `product.html?id=${productId}` : 'product.html';
+            document.getElementById('manualRedirectLink').href = productPageUrl;
+            
+            // Redirect after 1 second
+            setTimeout(() => {
+                window.location.href = productPageUrl;
+            }, 1000);
+        }
+        
+        // Function to fetch product data from Supabase
+        async function fetchProductData() {
+            if (!productId) {
+                // No product ID, use default data
+                const defaultProduct = {
+                    name: defaultData.name,
+                    description: defaultData.description,
+                    image: defaultData.image
+                };
+                
+                updateMetaTags(defaultProduct);
+                displayProductPreview(defaultProduct);
+                return;
+            }
+            
+            try {
+                // Initialize Supabase client
+                const { createClient } = supabase;
+                const supabaseClient = createClient(DB_URL, DB_KEY);
+                
+                // Fetch product data
+                const { data, error } = await supabaseClient
+                    .from('products')
+                    .select('*')
+                    .eq('id', productId)
+                    .single();
+                
+                if (error || !data) {
+                    throw new Error('Product not found');
+                }
+                
+                // Update meta tags with fetched data
+                updateMetaTags(data);
+                displayProductPreview(data);
+                
+            } catch (error) {
+                console.error('Error fetching product:', error);
+                
+                // Use default data on error
+                const defaultProduct = {
+                    name: defaultData.name,
+                    description: defaultData.description,
+                    image: defaultData.image
+                };
+                
+                updateMetaTags(defaultProduct);
+                displayProductPreview(defaultProduct);
+            }
+        }
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load Supabase client first
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+            script.onload = fetchProductData;
+            script.onerror = function() {
+                // If Supabase fails to load, use default data
+                const defaultProduct = {
+                    name: defaultData.name,
+                    description: defaultData.description,
+                    image: defaultData.image
+                };
+                
+                updateMetaTags(defaultProduct);
+                displayProductPreview(defaultProduct);
+            };
+            document.head.appendChild(script);
+        });
+        
+        // Fallback: If everything fails, redirect after 2 seconds
+        setTimeout(() => {
+            if (!window.location.href.includes('product.html')) {
+                const productPageUrl = productId ? `product.html?id=${productId}` : 'product.html';
+                window.location.href = productPageUrl;
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
